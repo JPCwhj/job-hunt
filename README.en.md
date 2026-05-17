@@ -115,6 +115,16 @@ npx skills add JPCwhj/job-hunting -g
                     └── changelog.md  ← what AI changed (transparency log)
 ```
 
+### Output Formats
+
+Each run produces two shortlist files:
+
+- `shortlist.md`: Markdown summary for CLI viewing
+- `shortlist.html`: A standalone static HTML file, double-click to open in browser
+  - Desktop + mobile responsive
+  - Resume can be edited inline; edits auto-saved to browser localStorage
+  - One-click PDF export per job (A4, embedded Source Han Sans for cross-platform consistency)
+
 ---
 
 ## Design Boundaries

@@ -117,6 +117,16 @@ npx skills add JPCwhj/job-hunting -g
                     └── changelog.md  ← AI 改了什么（透明度保险）
 ```
 
+### 输出格式
+
+每次运行产出两份 shortlist：
+
+- `shortlist.md`：Markdown 汇总，适合命令行查看
+- `shortlist.html`：静态单 HTML 文件，双击在浏览器打开
+  - 桌面 + 移动端响应式
+  - 简历可在网页直接编辑，自动保存到浏览器本地
+  - 每个岗位一键导出 PDF（A4，内嵌思源黑体跨平台一致）
+
 ---
 
 ## 设计边界
