@@ -369,8 +369,98 @@ tailor 返回后，用 Bash 工具更新 state.json `phase` 为 `"tailored"`。
 <重复以上格式直到最后一名>
 ```
 
+**生成 shortlist.html**（在 shortlist.md 写入之后执行，全流程模式下不输出任何文字）：
+
+数据 schema：
+
+```json
+{
+  "run_id": "<run_id>",
+  "generated_at": "<ISO 8601 时间>",
+  "jobs": [
+    {
+      "id": "<jd id>",
+      "rank": 1,
+      "company": "<frontmatter company.name>",
+      "title": "<frontmatter title>",
+      "match_score": "<scores.total>",
+      "salary_range": "<frontmatter salary.range>",
+      "monthly_count": "<frontmatter salary.monthly_count，null 时为 null>",
+      "city": "<frontmatter location.city>",
+      "district": "<frontmatter location.district 或空字符串>",
+      "scores": {
+        "hard_skills": "<analysis scores.hard_skills>",
+        "experience_depth": "<analysis scores.experience_depth>",
+        "domain_fit": "<analysis scores.domain_fit>",
+        "soft_fit": "<analysis scores.soft_fit>"
+      },
+      "one_liner": "<analysis 一句话评估>",
+      "resume_md": "<tailored/<id>/resume.md 全文>",
+      "opener_md": "<tailored/<id>/opener.md 全文>",
+      "changelog_md": "<tailored/<id>/changelog.md 全文>"
+    }
+  ]
+}
+```
+
+执行步骤：
+
+1. Claude 用 Bash 把 jobs[] 数组写到临时文件 `<data_dir>/output/<run_id>/.jobs.json`
+2. Claude 用 Bash 执行下面的 Python 脚本（变量替换为实际路径与 run_id）
+
+```bash
+python3 - <<'PY'
+import json
+import datetime
+from pathlib import Path
+
+DATA_DIR = "<data_dir>"   # 替换为绝对路径
+RUN_ID = "<run_id>"        # 替换为实际 run_id
+
+template_path = Path.home() / ".claude/skills/job-hunt/template.html"
+if not template_path.exists():
+    print(f"SKIP: template not found at {template_path}")
+    raise SystemExit(0)
+
+jobs_path = Path(f"{DATA_DIR}/output/{RUN_ID}/.jobs.json")
+data = {
+    "run_id": RUN_ID,
+    "generated_at": datetime.datetime.now().isoformat(timespec="seconds"),
+    "jobs": json.loads(jobs_path.read_text()),
+}
+
+template = template_path.read_text()
+json_str = json.dumps(data, ensure_ascii=False)
+# 防止 </script> 截断
+json_str = json_str.replace("</script>", "<\\/script>")
+html = template.replace("__DATA_PLACEHOLDER__", json_str)
+
+out_path = Path(f"{DATA_DIR}/output/{RUN_ID}/shortlist.html")
+out_path.write_text(html)
+
+jobs_path.unlink()
+print(f"OK: {out_path} ({out_path.stat().st_size} bytes)")
+PY
+```
+
+**模板缺失时的降级**：脚本检测到模板不存在则打印 `SKIP: ...` 退出 0，主流程不中断。最后告知用户时根据是否 SKIP 决定是否提示 HTML 路径。
+
 更新 state.json `phase` 为 `"done"`。
-告知用户：「✅ 全部完成！shortlist 已保存到 <data_dir>/output/<run_id>/shortlist.md，并在上方展示。」
+
+告知用户（根据 HTML 是否生成成功调整文案）：
+
+- 若 HTML 生成成功：
+  ```
+  ✅ 全部完成！
+  - shortlist：<data_dir>/output/<run_id>/shortlist.md
+  - HTML 视图：<data_dir>/output/<run_id>/shortlist.html（双击在浏览器打开，可编辑简历并导出 PDF）
+  ```
+
+- 若 HTML 模板缺失（看到 SKIP）：
+  ```
+  ✅ 全部完成！shortlist 已保存到 <data_dir>/output/<run_id>/shortlist.md。
+  ⚠️ 未找到 ~/.claude/skills/job-hunt/template.html，跳过 HTML 输出。运行 `bash scripts/install.sh` 后下次会自动生成。
+  ```
 
 ---
 
