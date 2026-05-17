@@ -7,6 +7,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 WORK="$(mktemp -d)"
 echo "工作目录：$WORK"
+trap "rm -rf \"$WORK\"" EXIT
 
 # 1. 下载字体
 BASE="https://github.com/adobe-fonts/source-han-sans/raw/release/SubsetOTF/CN"
@@ -49,11 +50,13 @@ for weight in Regular Bold; do
 done
 
 # 4. 生成 CSS
-WORK_DIR="$WORK" SCRIPT_DIR="$SCRIPT_DIR" python3 - <<'PY'
+export WORK_DIR="$WORK"
+export SCRIPT_DIR="$SCRIPT_DIR"
+python3 - <<'PY'
 import base64, os
 from pathlib import Path
-work = os.environ.get("WORK_DIR")
-script_dir = os.environ.get("SCRIPT_DIR")
+work = os.environ["WORK_DIR"]
+script_dir = os.environ["SCRIPT_DIR"]
 lines = ["/* 思源黑体 CN 子集（GB2312 + ASCII，woff2 base64 内嵌） */"]
 for weight, num in [("Regular", 400), ("Bold", 700)]:
     b64 = base64.b64encode(Path(f"{work}/SourceHanSansCN-{weight}-subset.woff2").read_bytes()).decode()
