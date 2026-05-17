@@ -359,7 +359,10 @@
     }
 
     function renderTabContent(job) {
-      const el = document.getElementById('tab-content');
+      // Strip stale event listeners by cloning the element
+      const oldEl = document.getElementById('tab-content');
+      const el = oldEl.cloneNode(false);
+      oldEl.replaceWith(el);
       const actions = document.getElementById('action-bar');
 
       if (currentTab === 'resume') {
@@ -367,8 +370,15 @@
         el.setAttribute('contenteditable', 'true');
         el.addEventListener('paste', e => {
           e.preventDefault();
-          const text = (e.clipboardData || window.clipboardData).getData('text');
-          document.execCommand('insertText', false, text);
+          const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+          const sel = window.getSelection();
+          if (sel && sel.rangeCount) {
+            const range = sel.getRangeAt(0);
+            range.deleteContents();
+            range.insertNode(document.createTextNode(text));
+            range.collapse(false);
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+          }
         });
         let saveTimer = null;
         el.addEventListener('input', () => {
