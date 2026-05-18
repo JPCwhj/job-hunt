@@ -24,6 +24,15 @@ Screenshot any job listing page, AI parses the JD, runs a deep comparison agains
 
 ---
 
+## What It Won't Do
+
+- **No fabricated experience**: Won't add projects, skills, or jobs that aren't already in your resume
+- **No made-up numbers**: Where quantified results are missing, inserts a `[fill in: xxx]` placeholder — never invents user counts, growth rates, or revenue figures
+- **No changes to key facts**: Employment dates, job titles, and company names stay untouched
+- **No hidden edits**: Every change is logged in `changelog.md` — what was changed and why, for your review
+
+---
+
 ## 🖼 Preview
 
 After `/job-hunt` finishes, you get a single static HTML file. Opening it in any browser looks like this:
@@ -47,15 +56,6 @@ A full transparency report on what the AI changed: reordering / rewording / plac
 A ready-to-send HR opening message tailored to the current position (kept within 200 characters). Click "📋 Copy" to use it directly.
 
 ![Opener](htmlImg/long03.png)
-
----
-
-## What It Won't Do
-
-- **No fabricated experience**: Won't add projects, skills, or jobs that aren't already in your resume
-- **No made-up numbers**: Where quantified results are missing, inserts a `[fill in: xxx]` placeholder — never invents user counts, growth rates, or revenue figures
-- **No changes to key facts**: Employment dates, job titles, and company names stay untouched
-- **No hidden edits**: Every change is logged in `changelog.md` — what was changed and why, for your review
 
 ---
 
