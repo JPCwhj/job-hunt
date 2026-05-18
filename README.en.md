@@ -10,8 +10,6 @@ HR spends less than 10 seconds scanning a resume — **and how well your resume 
 
 **Send 5, 10, or 20 job postings at once — batch-process them all. AI runs the full pipeline (parse → match → tailor → opener) on every JD in parallel, then ranks them by match score in a single HTML, so you instantly see which roles to prioritize.**
 
-Screenshot any job listing page, AI parses the JD, runs a deep comparison against your resume, generates a tailored resume + HR opener + change log just for this role, then ranks everything by match score into your shortlist.
-
 > You decide who to apply to. AI gets every application ready.
 
 ---
