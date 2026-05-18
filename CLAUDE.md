@@ -125,3 +125,4 @@ Claude Code 的运行模型：
 - ✅ Step 2.5 修复评估绕过过滤规则的问题：规则一→二→三已明确为强制先决条件，新增"不得根据公司名/职位名推断工作内容进行评估"约束，评估维度入口前加兜底 stop 条件，防止空区块（如只有头部行的「工作及教育经历」）被错误评估
 - ✅ Step 7 新增 HTML 输出：生成 shortlist.html（静态单文件，内嵌思源黑体+marked+html2pdf），左列表+右详情响应式布局，简历可编辑+localStorage 持久化，每岗位一键导出 PDF；保留所有原 MD 输出
 - ✅ 新增 Chrome 浏览器插件（仅 Boss 直聘）：详情页悬浮按钮 + 图标 popup 清单 → 导出 .jobs.json 到 Downloads；主 skill Step 3 新增 .jobs.json 识别分支，调 import_jobs.py 直接写入 jd-pool（跳过 OCR）；目录扫描分支同步支持图片 + .jobs.json 混合处理；插件源码在 `chrome-extension/` 目录，开发者模式加载安装；插件只读 DOM，不调 Boss API、不模拟点击、不存 cookie；所有 DOM 操作用 createElement + textContent，禁用 innerHTML
+- ✅ Chrome 插件 DOM 选择器全面修正（基于实机诊断）：使用 background service worker console 绕开 Boss 反 DevTools 检测，找到真实 class names；修正 tag-list li（城市/经验/学历）、p.desc+innerText（岗位描述，过滤 CSS 注入噪声）、boss-info-attr（公司名+HR职位）、boss-active-time（HR活跃状态）、job-label-list li（标签）等核心选择器；三个岗位实测验证通过
