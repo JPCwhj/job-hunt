@@ -542,8 +542,7 @@ fi
 
 | 脚本 stdout 内容 | 状态 |
 |---|---|
-| `OK: ...` + `OPENED: browser launched` | HTML 生成成功，浏览器已自动打开 |
-| `OK: ...` + `OPEN_FAILED: ...` | HTML 生成成功，但浏览器没自动打开 |
+| `OK: ...`（无论后续 `OPENED` 或 `OPEN_FAILED`） | HTML 生成成功，提示用户手动打开（部分环境 Bash 沙箱无法触发系统浏览器，统一不依赖自动打开） |
 | `SKIP: template not found` | 模板文件缺失（极少发生，提示重装） |
 | `PYTHON_MISSING` | 系统没装 Python 3，引导用户安装 |
 | `ERROR: ...`（stderr） | 其他错误，告知用户排查 |
@@ -558,24 +557,17 @@ fi
 
 **完成提示文案根据 HTML 是否生成成功调整：**
 
-- **HTML 生成成功 + 浏览器自动打开**（Python 脚本输出 `OK: ...` 且 `OPENED: ...`）：
-  ```
-  ✅ 全部完成！已自动在浏览器打开 HTML 视图。
-
-  - 📄 shortlist：<data_dir 绝对路径>/output/<run_id>/shortlist.md
-  - 🌐 HTML 视图：file://<data_dir 绝对路径>/output/<run_id>/shortlist.html
-
-  💡 终端里 Cmd+点击（Mac）/ Ctrl+点击（Win/Linux）上面的 file:// 链接可重新在浏览器打开；HTML 页面支持简历编辑和一键导出 PDF。
-  ```
-
-- **HTML 生成成功但浏览器没自动打开**（Python 脚本输出 `OK: ...` 但 `OPEN_FAILED: ...`）：
+- **HTML 生成成功**（Python 脚本输出 `OK: ...`，**无论是否伴随 `OPENED` 或 `OPEN_FAILED`**——统一不依赖自动打开浏览器）：
   ```
   ✅ 全部完成！
 
   - 📄 shortlist：<data_dir 绝对路径>/output/<run_id>/shortlist.md
   - 🌐 HTML 视图：file://<data_dir 绝对路径>/output/<run_id>/shortlist.html
 
-  💡 自动打开浏览器失败，请 Cmd+点击（Mac）/ Ctrl+点击（Win/Linux）上面的 file:// 链接，或复制路径到浏览器地址栏。
+  💡 复制上面的 file:// 链接到浏览器地址栏打开，即可查看完整简历视图。页面支持：
+     · 在网页上直接编辑简历（自动保存到浏览器本地）
+     · 一键导出为 PDF（中文字体跨平台一致）
+     · 切换查看每个岗位的简历 / 改动 / 开场白
   ```
 
 - **HTML 模板缺失**（Python 脚本输出 `SKIP: ...`）：
@@ -604,7 +596,7 @@ fi
      python3 ~/.claude/skills/job-hunt/build_html.py "<data_dir 绝对路径>" "<run_id>"
   ```
 
-⚠️ **关键**：file:// 链接**不要用反引号包**——大部分终端在反引号里的链接不可点击，必须裸 URL 才能 Cmd/Ctrl+点击。
+⚠️ **关键**：file:// 链接**不要用反引号包**——纯文本链接更容易让用户三击全选复制到浏览器。
 
 ⚠️ **再次强调**：以上完成提示是整条消息的最后一段，**绝对不能省略**。如果只输出了 shortlist 内容就停止，等于让用户看不到 HTML 文件路径——这是必须避免的故障模式。
 
