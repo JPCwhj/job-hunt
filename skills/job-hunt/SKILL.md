@@ -354,52 +354,90 @@ B. 先不改，用当前简历继续
 
 ---
 
-## Step 3：截图收集与导入
+## Step 3：岗位收集与导入
 
 （全流程、fetch 子命令时执行）
 
 提示用户：
 
-「请上传你感兴趣的岗位详情页截图（Boss直聘、智联招聘、前程无忧、猎聘、拉勾等均可），一次发完即可。
+「请上传你感兴趣的岗位，支持以下方式：
 
-📌 **重要规则：一张截图 = 一个岗位**
-   岗位信息长的话请用长截图功能，把岗位内容截在一张图里。
-   截图里**至少要有岗位名称**（公司名可选，没有也行）。
+【方式一】直接发岗位详情页截图（任意招聘平台，Boss/智联/猎聘/拉勾等）
+          一次可发多张，📌 一张截图 = 一个岗位
+          岗位信息长请用长截图，截图里至少要有岗位名（公司名可选）
 
-也可以告诉我截图所在的目录路径，我来自动读取。」
+【方式二】告诉我截图所在的目录路径（如 /Users/xxx/Desktop/jobs）
+          我会自动读取该目录下的所有图片，以及 .jobs.json 文件（不递归子目录）
 
-发出上方提示后，停止执行，等待用户发送截图或消息。
+【方式三】用浏览器插件导出 .jobs.json 文件后一键拖进来（仅 Boss 直聘）
+          👉 没装插件？查看 README 安装说明」
 
-**根据用户输入方式处理：**
+发出上方提示后，停止执行，等待用户发送截图或消息。不得提前进入循环。
 
-**方式一：直接上传截图**
+**判断用户输入类型：**
 
-收到图片文件后，直接进入下方「调用 fetcher」步骤。
+| 输入 | 处理分支 |
+|---|---|
+| 图片附件（一张或多张） | 分支 A：截图解析 |
+| 文件路径，以 `.jobs.json` 结尾 | 分支 C：JSON 导入 |
+| 目录路径 | 分支 B：扫描目录（图片 + .jobs.json 混合） |
 
-**方式二：提供目录路径**
+### 分支 A：截图解析
 
-用户发来本地目录路径（如 `/Users/xxx/Desktop/jobs`）时：
-1. 用 Bash 验证目录存在：`ls "<路径>"` —— 若不存在，告知用户「目录不存在，请确认路径后重新发送。」并重新等待
-2. 用 Bash 列出该目录下的图片文件（**只读当前目录，不递归子目录**）：
-   ```bash
-   find "<路径>" -maxdepth 1 -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.webp" \)
-   ```
-3. 若没有找到图片文件，告知用户「该目录下没有找到图片文件（支持 png/jpg/jpeg/webp），请确认后重新发送。」并重新等待
-4. 告知用户找到了哪些文件：「找到 <N> 张截图：<文件名列表>，开始解析。」
-5. 用 Read 工具逐张读取图片内容，汇总后进入下方「调用 fetcher」步骤
+调用 Skill 工具，加载 `job-hunt-fetcher` skill，传入：
+- `work_dir`：<data_dir 的值>
+- `run_id`：<当前 run_id>
+- `screenshots`：<本批次截图>
 
-**调用 fetcher：**
+fetcher 内部处理（含分组确认交互），完成后写入 jd-pool。
 
-1. 调用 Skill 工具，加载 `job-hunt-fetcher` skill，传入：
-   - `work_dir`：<data_dir 的值>
-   - `run_id`：<当前 run_id>
-   - `screenshots`：<本批次截图>
-2. fetcher 内部处理（含分组确认交互），完成后写入 jd-pool
-3. 用 Bash 工具扫描 `<data_dir>/.work/jd-pool/` 下所有 `.md` 文件（排除 `.analysis.md`），读取 frontmatter 中 `run_id` 等于当前 run_id 的文件，提取其 `id` 字段，作为本批次 ID 列表；将 ID 列表追加到 `state.json` 的 `stages.fetched`，更新 `checkpoint_at` 和 `phase` 为 `"fetched"`
+### 分支 B：扫描目录
+
+用 Bash 验证目录存在：
+```
+ls "<目录路径>"
+```
+若不存在，告知用户「目录不存在，请确认路径后重新发送。」并重新等待。
+
+用 Bash 列出该目录下的图片文件和 .jobs.json 文件（只读当前目录，不递归子目录）：
+```
+find "<目录>" -maxdepth 1 -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.webp" -o -iname "*.jobs.json" \) | sort
+```
+
+若结果为空，告知用户「该目录下没有找到图片或 .jobs.json 文件，请确认后重新发送。」并重新等待。
+
+告知用户找到了哪些文件：「找到 <N> 张截图 + <M> 个 .jobs.json 文件，开始处理。」
+
+按文件类型分别处理：
+- 图片 → 分支 A（调 fetcher）
+- 每个 .jobs.json → 分支 C（调 import_jobs.py）
+
+### 分支 C：JSON 导入
+
+用 Bash 调用 import_jobs.py：
+
+```bash
+if command -v python3 >/dev/null 2>&1; then PYBIN=python3; \
+elif command -v python >/dev/null 2>&1; then PYBIN=python; \
+else echo "PYTHON_MISSING"; exit 1; fi
+
+"$PYBIN" "$HOME/.claude/skills/job-hunt/import_jobs.py" "<data_dir>" "<json_path>"
+```
+
+预期 stdout：
+- `OK: 已导入 N 个岗位 -> ...` → 成功，继续
+- `ERROR: ...` → 告知用户「.jobs.json 处理失败：<原因>。请检查文件后重发。」并重新等待
+- `PYTHON_MISSING` → 告知用户「需要 Python 3 才能处理 .jobs.json，请安装后重试。」并停止
+
+### 公共后续
+
+不论分支 A/B/C，全部处理完成后：
+
+用 Bash 工具扫描 `<data_dir>/.work/jd-pool/` 下所有 `.md` 文件（排除 `.analysis.md`），读取 frontmatter 中 `run_id` 等于当前 run_id 的文件（extension-import 也包含），提取其 `id` 字段，作为本批次 ID 列表；将 ID 列表追加到 `state.json` 的 `stages.fetched`，更新 `checkpoint_at` 和 `phase` 为 `"fetched"`。
 
 若子命令为 `fetch`：告知用户「✅ JD 导入完成，共 <N> 个岗位。运行 /job-hunt analyze 开始分析。」并停止。
 
-**【全流程】⚠️ fetcher 返回后，严禁输出任何文字（包括不得回显或复述 fetcher 的输出内容）。state.json 更新完毕后，下一个动作必须是 Skill 工具调用（执行 Step 4），不得有任何文字夹在中间。**
+**【全流程】⚠️ 本步骤完成后到 Step 7 之间，严禁输出任何文字（包括不得回显或复述子 skill 的输出内容）。state.json 更新完毕后，下一个动作必须是 Skill 工具调用（执行 Step 4），不得有任何文字夹在中间。**
 
 ---
 
