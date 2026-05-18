@@ -17,7 +17,7 @@
   "icons": { "16": "icons/16.png", "48": "icons/48.png", "128": "icons/128.png" },
   "content_scripts": [
     {
-      "matches": ["https://www.zhipin.com/job_detail/*"],
+      "matches": ["https://www.zhipin.com/job_detail/*", "https://www.zhipin.com/web/geek/jobs*"],
       "js": ["src/lib/schema.js", "src/lib/storage.js", "src/content/boss.js"],
       "css": ["src/content/boss.css"],
       "run_at": "document_idle"

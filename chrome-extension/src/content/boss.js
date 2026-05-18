@@ -11,22 +11,66 @@ function txtAll(selector, root) {
     .filter(Boolean);
 }
 
+// 找右侧详情面板（分栏模式）
+function jhFindRightPanel() {
+  const selectors = [
+    '.job-detail-box', '.detail-box', '.job-detail-card',
+    '.recommend-detail', '.search-job-result .job-detail',
+    '[class*="jobDetail"]', '[class*="job-detail"]',
+  ];
+  for (const sel of selectors) {
+    const el = document.querySelector(sel);
+    if (el) return el;
+  }
+  // 兜底：找到含 .job-sec-text 的容器（只在右侧面板出现）
+  const descEl = document.querySelector('.job-sec-text, .job-detail-section .text');
+  if (descEl) return descEl.closest('section, article, [class*="detail"]') || descEl.parentElement;
+  return null;
+}
+
 function jhExtractExternalId() {
-  const m = location.pathname.match(/job_detail\/([^.\/]+)\.html/);
-  return m ? m[1] : null;
+  // 单独详情页：从 URL 提取
+  const m = location.pathname.match(/\/job_detail\/([^.\/\?#]+)/);
+  if (m) return m[1];
+
+  // 分栏模式：从右侧面板的 job_detail 链接提取
+  const panel = jhFindRightPanel();
+  if (panel) {
+    const link = panel.querySelector('a[href*="/job_detail/"]');
+    if (link) {
+      const lm = (link.getAttribute('href') || '').match(/\/job_detail\/([^.\/\?#]+)/);
+      if (lm) return lm[1];
+    }
+  }
+  // 兜底：左侧列表中当前 active 条目的链接
+  const activeLink = document.querySelector(
+    '.job-card-wrapper.active a[href*="/job_detail/"], ' +
+    '[class*="active"] a[href*="/job_detail/"]'
+  );
+  if (activeLink) {
+    const lm = (activeLink.getAttribute('href') || '').match(/\/job_detail\/([^.\/\?#]+)/);
+    if (lm) return lm[1];
+  }
+  return null;
 }
 
 function jhParseBossDetailPage() {
   const job = jhEmptyJob();
   job.platform = "boss";
-  job.url = location.href;
-  job.external_id = jhExtractExternalId();
   job.saved_at = new Date().toISOString();
+  job.external_id = jhExtractExternalId();
 
-  job.title = txt(".job-name") || txt(".name h1") || txt("h1");
-  job.salary.range = txt(".job-salary") || txt(".salary");
+  // 分栏模式下把解析范围限制在右侧面板，避免抓到左侧列表的同名元素
+  const root = jhFindRightPanel() || document;
 
-  const primary = document.querySelector(".job-primary, .info-primary");
+  // job URL：优先用面板里的 job_detail 链接（分栏模式），否则用当前页 URL
+  const detailLink = root.querySelector('a[href*="/job_detail/"]');
+  job.url = (detailLink && detailLink.href) || location.href;
+
+  job.title = txt(".job-name", root) || txt(".name h1", root) || txt("h1", root);
+  job.salary.range = txt(".job-salary", root) || txt(".salary", root);
+
+  const primary = root.querySelector(".job-primary, .info-primary");
   if (primary) {
     const tags = txtAll("p, span", primary);
     tags.forEach(t => {
@@ -35,17 +79,17 @@ function jhParseBossDetailPage() {
     });
   }
 
-  const locText = txt(".location-address") || txt(".job-location");
+  const locText = txt(".location-address", root) || txt(".job-location", root);
   if (locText) {
     const parts = locText.split(/[·\s\-]+/).filter(Boolean);
     job.location.city = parts[0] || null;
     job.location.district = parts[1] || null;
   }
 
-  job.benefits = txtAll(".job-tags span, .tag-list span");
-  job.tags = txtAll(".job-keyword-list li, .job-detail-section .tag");
+  job.benefits = txtAll(".job-tags span, .tag-list span", root);
+  job.tags = txtAll(".job-keyword-list li, .job-detail-section .tag", root);
 
-  const detailText = txt(".job-sec-text") || txt(".job-detail-section .text") || txt(".job-detail");
+  const detailText = txt(".job-sec-text", root) || txt(".job-detail-section .text", root) || txt(".job-detail", root);
   if (detailText) {
     const splitRe = /(任职要求|岗位要求|任职资格|要求[:：])/;
     const m = detailText.split(splitRe);
@@ -57,24 +101,25 @@ function jhParseBossDetailPage() {
     }
   }
 
-  job.company.name = txt(".company-info .name") || txt(".sider-company .name") || txt(".job-company-info h3");
-  const sizeText = txt(".company-info .size") || txt(".sider-company .size");
+  job.company.name = txt(".company-info .name", root) || txt(".sider-company .name", root) || txt(".job-company-info h3", root);
+  const sizeText = txt(".company-info .size", root) || txt(".sider-company .size", root);
   job.company.size = jhCompanySizeCode(sizeText);
-  job.company.industry = txt(".company-info .industry") || txt(".sider-company .industry");
-  job.company.stage = txt(".company-info .stage") || txt(".sider-company .stage");
-  job.company_intro = txt(".job-sec-company .text") || txt(".company-intro");
+  job.company.industry = txt(".company-info .industry", root) || txt(".sider-company .industry", root);
+  job.company.stage = txt(".company-info .stage", root) || txt(".sider-company .stage", root);
+  job.company_intro = txt(".job-sec-company .text", root) || txt(".company-intro", root);
 
-  job.hr.name = txt(".job-author .name") || txt(".boss-info .name");
-  job.hr.title = txt(".job-author .position") || txt(".boss-info .position");
-  job.hr.active_status = txt(".job-author .active-time") || txt(".boss-info .active-status");
+  job.hr.name = txt(".job-author .name", root) || txt(".boss-info .name", root);
+  job.hr.title = txt(".job-author .position", root) || txt(".boss-info .position", root);
+  job.hr.active_status = txt(".job-author .active-time", root) || txt(".boss-info .active-status", root);
 
-  job.posted_at = txt(".job-author .time") || txt(".job-detail-section .time");
+  job.posted_at = txt(".job-author .time", root) || txt(".job-detail-section .time", root);
 
   return job;
 }
 
 globalThis.jhParseBossDetailPage = jhParseBossDetailPage;
 globalThis.jhExtractExternalId = jhExtractExternalId;
+globalThis.jhFindRightPanel = jhFindRightPanel;
 
 // 追加到 boss.js 末尾。所有 DOM 用 createElement + textContent，禁用 innerHTML
 
@@ -136,17 +181,37 @@ function jhMountFab() {
 
 jhMountFab();
 
-// SPA 路由变化时重新挂载
+// 监听 SPA 路由变化 + 分栏模式下的面板内容切换
 let __jhLastUrl = location.href;
+let __jhLastJobId = jhExtractExternalId();
+let __jhObsTimer = null;
+
 new MutationObserver(() => {
-  if (location.href !== __jhLastUrl) {
-    __jhLastUrl = location.href;
-    if (/job_detail\//.test(location.pathname)) {
-      setTimeout(() => {
+  // 节流：300ms 内只触发一次检查
+  if (__jhObsTimer) return;
+  __jhObsTimer = setTimeout(() => {
+    __jhObsTimer = null;
+
+    const currentUrl = location.href;
+    if (currentUrl !== __jhLastUrl) {
+      __jhLastUrl = currentUrl;
+      // SPA 跳转到单独详情页
+      if (/job_detail\//.test(location.pathname)) {
         const existing = document.getElementById("jh-fab");
         if (existing) jhRefreshFabState(existing);
         else jhMountFab();
-      }, 500);
+        __jhLastJobId = jhExtractExternalId();
+        return;
+      }
     }
-  }
+
+    // 分栏模式：右侧面板切换了新岗位时刷新 FAB 状态
+    const currentId = jhExtractExternalId();
+    if (currentId && currentId !== __jhLastJobId) {
+      __jhLastJobId = currentId;
+      const existing = document.getElementById("jh-fab");
+      if (existing) jhRefreshFabState(existing);
+      else jhMountFab();
+    }
+  }, 300);
 }).observe(document.body, { childList: true, subtree: true });
