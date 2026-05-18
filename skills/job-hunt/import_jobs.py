@@ -55,10 +55,10 @@ def build_md(job, run_id):
     intro_section = f"\n\n## 公司介绍\n\n{intro}" if intro else ""
 
     md = f"""---
-id: {id_}
-fetched_at: {now}
-run_id: {run_id}
-source: extension
+id: {yaml_value(id_)}
+fetched_at: {yaml_value(now)}
+run_id: {yaml_value(run_id)}
+source: {yaml_value("extension")}
 
 title: {yaml_value(title)}
 company:
@@ -135,6 +135,7 @@ def main():
         if runs: run_id = runs[0]
 
     written = 0
+    errors = []
     for job in jobs:
         try:
             md, fname = build_md(job, run_id)
@@ -147,10 +148,15 @@ def main():
             target.write_text(md, encoding="utf-8")
             written += 1
         except Exception as e:
-            print(f"ERROR: 写入失败 {e}")
-            sys.exit(2)
+            errors.append(str(e))
 
-    print(f"OK: 已导入 {written} 个岗位 -> {jd_pool}")
+    if errors and written == 0:
+        print(f"ERROR: 全部写入失败：{errors[0]}")
+        sys.exit(2)
+    elif errors:
+        print(f"OK: 已导入 {written} 个岗位（{len(errors)} 个失败：{errors[0]}）-> {jd_pool}")
+    else:
+        print(f"OK: 已导入 {written} 个岗位 -> {jd_pool}")
 
 
 if __name__ == "__main__":

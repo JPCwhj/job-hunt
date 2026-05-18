@@ -117,12 +117,14 @@ function onExportClick() {
   chrome.runtime.sendMessage(
     { type: "jh-export", filename, jsonText },
     (resp) => {
+      const lastErr = chrome.runtime.lastError;
       const btn = document.getElementById("jh-export");
       if (resp && resp.ok) {
         btn.textContent = `✅ 已导出 ${payload.jobs.length} 个，查看 Downloads`;
         setTimeout(updateExportButton, 2500);
       } else {
-        btn.textContent = `❌ 导出失败：${resp ? resp.error : "未知错误"}`;
+        const errMsg = (resp && resp.error) || (lastErr && lastErr.message) || "未知错误";
+        btn.textContent = `❌ 导出失败：${errMsg}`;
         setTimeout(updateExportButton, 3500);
       }
     }

@@ -141,6 +141,12 @@ let __jhLastUrl = location.href;
 new MutationObserver(() => {
   if (location.href !== __jhLastUrl) {
     __jhLastUrl = location.href;
-    if (/job_detail\//.test(location.pathname)) setTimeout(jhMountFab, 500);
+    if (/job_detail\//.test(location.pathname)) {
+      setTimeout(() => {
+        const existing = document.getElementById("jh-fab");
+        if (existing) jhRefreshFabState(existing);
+        else jhMountFab();
+      }, 500);
+    }
   }
 }).observe(document.body, { childList: true, subtree: true });
