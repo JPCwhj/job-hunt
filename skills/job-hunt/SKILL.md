@@ -1,9 +1,9 @@
 ---
 name: job-hunt
-description: 求职助手主入口。上传招聘平台岗位详情页截图（Boss直聘、智联招聘、前程无忧等均可），与你的简历做 STAR 匹配分析，生成定制简历和开场白，按匹配度排序产出 shortlist。支持子命令：fetch / analyze / tailor / status / clean。
+description: 求职猎手主入口。上传招聘平台岗位详情页截图（Boss直聘、智联招聘、前程无忧等均可），与你的简历做 STAR 匹配分析，生成定制简历和开场白，按匹配度排序产出 shortlist。支持子命令：fetch / analyze / tailor / status / clean。
 ---
 
-# job-hunt 求职助手
+# job-hunt 求职猎手
 
 ## ⚡ 全流程自动执行约束（最高优先级，全程有效）
 

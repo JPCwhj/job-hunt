@@ -1,4 +1,4 @@
-# job-hunt · 简历雷达-求职助手 skill
+# job-hunt · 求职猎手-简历助手 skill
 
 [English](README.en.md)
 
