@@ -74,7 +74,7 @@ HR 扫一眼的时间不到 10 秒——**简历和 JD 的匹配度，才是能�
 ## 安装或更新
 
 ```bash
-npx skills add JPCwhj/job-hunting -g -y
+npx skills add JPCwhj/job-hunt -g -y
 ```
 
 ---
