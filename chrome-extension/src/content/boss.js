@@ -75,3 +75,72 @@ function jhParseBossDetailPage() {
 
 globalThis.jhParseBossDetailPage = jhParseBossDetailPage;
 globalThis.jhExtractExternalId = jhExtractExternalId;
+
+// 追加到 boss.js 末尾。所有 DOM 用 createElement + textContent，禁用 innerHTML
+
+function jhShowToast(msg) {
+  let t = document.getElementById("jh-toast");
+  if (!t) {
+    t = document.createElement("div");
+    t.id = "jh-toast";
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.classList.add("jh-show");
+  setTimeout(() => t.classList.remove("jh-show"), 1800);
+}
+
+function jhSetFabContent(btn, icon, label, saved) {
+  // 清空再填，避免 innerHTML
+  while (btn.firstChild) btn.removeChild(btn.firstChild);
+  const iconSpan = document.createElement("span");
+  iconSpan.textContent = icon;
+  btn.appendChild(iconSpan);
+  btn.appendChild(document.createTextNode(label));
+  btn.classList.toggle("jh-saved", !!saved);
+}
+
+async function jhRefreshFabState(btn) {
+  const id = jhExtractExternalId();
+  if (!id) return;
+  const saved = await jhHasJob(id);
+  if (saved) jhSetFabContent(btn, "✅", "已收藏（点击取消）", true);
+  else jhSetFabContent(btn, "⭐", "加入清单", false);
+}
+
+async function jhOnFabClick(btn) {
+  const id = jhExtractExternalId();
+  if (!id) { jhShowToast("未能识别岗位 ID"); return; }
+  const saved = await jhHasJob(id);
+  if (saved) {
+    await jhRemoveJob(id);
+    jhShowToast("已从清单移除");
+  } else {
+    const job = jhParseBossDetailPage();
+    if (!job.title) { jhShowToast("岗位标题未抓到，请刷新页面后重试"); return; }
+    const count = await jhUpsertJob(job);
+    jhShowToast(`已收藏（共 ${count} 个）`);
+  }
+  await jhRefreshFabState(btn);
+}
+
+function jhMountFab() {
+  if (document.getElementById("jh-fab")) return;
+  const btn = document.createElement("button");
+  btn.id = "jh-fab";
+  jhSetFabContent(btn, "⭐", "加入清单", false);
+  btn.addEventListener("click", () => jhOnFabClick(btn));
+  document.body.appendChild(btn);
+  jhRefreshFabState(btn);
+}
+
+jhMountFab();
+
+// SPA 路由变化时重新挂载
+let __jhLastUrl = location.href;
+new MutationObserver(() => {
+  if (location.href !== __jhLastUrl) {
+    __jhLastUrl = location.href;
+    if (/job_detail\//.test(location.pathname)) setTimeout(jhMountFab, 500);
+  }
+}).observe(document.body, { childList: true, subtree: true });
