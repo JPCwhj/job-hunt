@@ -380,8 +380,27 @@ B. 先不改，用当前简历继续
    find "<路径>" -maxdepth 1 -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.webp" \)
    ```
 3. 若没有找到图片文件，告知用户「该目录下没有找到图片文件（支持 png/jpg/jpeg/webp），请确认后重新发送。」并重新等待
-4. 告知用户找到了哪些文件：「找到 <N> 张截图：<文件名列表>，开始解析。」
-5. 用 Read 工具逐张读取图片内容，汇总后进入下方「调用 fetcher」步骤
+4. **必须先列出文件并征得用户确认，不得直接进入解析**。输出格式（整条回复以「👉 回复...」结尾）：
+
+   ```
+   📂 在目录 <路径> 下找到 <N> 张截图：
+
+   1. <文件名 1>
+   2. <文件名 2>
+   ...
+   N. <文件名 N>
+
+   是否全部解析这些截图？如果有不想分析的，请告诉我哪几张要排除（例如「排除 2 和 5」「只要前 3 张」）。
+
+   👉 回复「确认」开始解析，或告诉我需要排除哪些
+   ```
+
+   停止执行，等待用户回复。
+5. 根据用户回复处理：
+   - 回「确认」/「好」/「ok」等表示全部解析 → 用 Read 工具逐张读取全部图片
+   - 指定排除/筛选范围（如「排除 2 和 5」「只要前 3 张」「不要最后两张」）→ 按用户意图过滤后再用 Read 读取
+   - 不明确 → 简短复述当前列表，再询问一次
+6. 读取完图片内容后，进入下方「调用 fetcher」步骤
 
 **调用 fetcher：**
 
@@ -461,7 +480,34 @@ tailor 返回后，用 Bash 工具更新 state.json `phase` 为 `"tailored"`。
 
 （全流程最后一步）
 
-读取所有 analysis 文件和对应 JD frontmatter，生成 `<data_dir>/output/<run_id>/shortlist.md`，**同时在聊天消息中输出完整内容**：
+**执行顺序（严格按此顺序，不要打乱）：**
+
+1. 用 Bash 工具：把 shortlist 内容写入 `<data_dir>/output/<run_id>/shortlist.md` 文件
+2. 用 Bash 工具：聚合 jobs JSON 写入 `.jobs.json` 临时文件
+3. 用 Bash 工具：执行 Python 脚本生成 `shortlist.html`
+4. 用 Bash 工具：更新 `state.json` 的 `phase` 为 `"done"`
+5. **最后一步**：在聊天里输出**一条完整消息**，包含两部分：
+   - 第一部分：shortlist.md 的完整内容（让用户立即看到排名概览）
+   - 第二部分：紧跟在 shortlist 内容之后的**完成提示**（含 MD 和 HTML 文件路径）—— **这部分是必输出项，不得遗漏**
+
+**最终消息的输出模板：**
+
+````
+# 求职 Shortlist · <run_id>
+
+<...shortlist 完整内容，格式见下文...>
+
+---
+
+✅ 全部完成！
+
+- 📄 shortlist：`<data_dir>/output/<run_id>/shortlist.md`
+- 🌐 HTML 视图：`<data_dir>/output/<run_id>/shortlist.html`（双击在浏览器打开，可编辑简历并导出 PDF）
+````
+
+⚠️ **关键约束：完成提示（✅ 全部完成！...）必须是整条消息的最后一段**，不得省略、不得放在中间。用户依赖这段提示才能找到 HTML 文件路径。
+
+shortlist 内容格式：
 
 ```markdown
 # 求职 Shortlist · <run_id>
@@ -559,22 +605,27 @@ PY
 
 **模板缺失时的降级**：脚本检测到模板不存在则打印 `SKIP: ...` 退出 0，主流程不中断。最后告知用户时根据是否 SKIP 决定是否提示 HTML 路径。
 
-更新 state.json `phase` 为 `"done"`。
+更新 state.json `phase` 为 `"done"` 之后，**必须**在聊天里输出最终消息——按上方「最终消息的输出模板」执行（shortlist 完整内容 + 完成提示）。
 
-告知用户（根据 HTML 是否生成成功调整文案）：
+**完成提示文案根据 HTML 是否生成成功调整：**
 
-- 若 HTML 生成成功：
+- **HTML 生成成功**（Python 脚本输出 `OK: ...`）：
   ```
   ✅ 全部完成！
-  - shortlist：<data_dir>/output/<run_id>/shortlist.md
-  - HTML 视图：<data_dir>/output/<run_id>/shortlist.html（双击在浏览器打开，可编辑简历并导出 PDF）
+
+  - 📄 shortlist：`<data_dir>/output/<run_id>/shortlist.md`
+  - 🌐 HTML 视图：`<data_dir>/output/<run_id>/shortlist.html`（双击在浏览器打开，可编辑简历并导出 PDF）
   ```
 
-- 若 HTML 模板缺失（看到 SKIP）：
+- **HTML 模板缺失**（Python 脚本输出 `SKIP: ...`）：
   ```
-  ✅ 全部完成！shortlist 已保存到 <data_dir>/output/<run_id>/shortlist.md。
-  ⚠️ 未找到 ~/.claude/skills/job-hunt/template.html，跳过 HTML 输出。运行 `bash scripts/install.sh` 后下次会自动生成。
+  ✅ 全部完成！
+
+  - 📄 shortlist：`<data_dir>/output/<run_id>/shortlist.md`
+  - ⚠️ 未找到 `~/.claude/skills/job-hunt/template.html`，跳过 HTML 输出。运行 `bash scripts/install.sh` 后下次会自动生成。
   ```
+
+⚠️ **再次强调**：以上完成提示是整条消息的最后一段，**绝对不能省略**。如果只输出了 shortlist 内容就停止，等于让用户看不到 HTML 文件路径——这是必须避免的故障模式。
 
 ---
 
