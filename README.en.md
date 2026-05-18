@@ -1,4 +1,4 @@
-# job-hunt · Resume Radar - Job Search Assistant Skill
+# job-hunt · Job Hunter - Resume Assistant Skill
 
 [中文](README.md)
 
@@ -68,7 +68,8 @@ npx skills add JPCwhj/job-hunting -g
 **Workflow**:
 1. Provide your resume (upload file, give a path, or paste text directly)
 2. AI evaluates resume quality section by section — revise and re-upload, or continue as-is
-3. Upload job listing screenshots (multiple at once, or in batches)
+3. Upload job listing screenshots
+   📌 One screenshot = one job (use long screenshot for long postings); each screenshot must include at least the job title (company name optional)
 4. After confirming screenshots, analysis and tailoring run automatically — no extra trigger needed
 5. Review shortlist, fill in placeholders, apply manually
 
@@ -89,10 +90,11 @@ npx skills add JPCwhj/job-hunting -g
 
 ## Prerequisites
 
-- **Your AI model must support vision (image recognition)**
+- **Your AI model must support vision (image recognition)** (for screenshot parsing)
 - [Claude Code](https://github.com/anthropics/claude-code) installed, or any agent that supports the Skill spec (e.g. Codex, OpenClaw)
-- If your resume is a Word document (`.docx` or `.doc`), install [docx skill](https://skills.sh/anthropics/skills/docx) first
-- Any hiring platform — just screenshot the job detail page
+- Resume must be prepared as a **`.md` file** or **plain text ready to paste** — for PDF/Word resumes, open them in a reader, select-all and copy the content, or save as `.md` before sending
+- Any major hiring platform — just screenshot the job detail page
+- 📌 **Screenshot rule: one screenshot = one job**. Use long screenshot to capture the full posting in one image; each screenshot must contain at least the job title (company name optional)
 
 ---
 
@@ -106,7 +108,7 @@ npx skills add JPCwhj/job-hunting -g
     │   └── jd-pool/              ← parsed JD cache
     └── output/
         └── 2026-05-02-1430/
-            ├── shortlist.md      ← final ranked results
+            ├── shortlist.html    ← final view (open in browser)
             ├── state.json        ← checkpoint state
             └── tailored/
                 └── <company-title>/
@@ -114,6 +116,15 @@ npx skills add JPCwhj/job-hunting -g
                     ├── opener.md     ← opening message
                     └── changelog.md  ← what AI changed (transparency log)
 ```
+
+### Output Format
+
+`shortlist.html`: A standalone static HTML file. Copy the path into your browser to open:
+- Desktop + mobile responsive
+- All jobs ranked by match score
+- Resume can be edited inline; edits auto-saved to browser localStorage
+- One-click PDF export per job (A4, embedded Source Han Sans for cross-platform consistency)
+- Switch between resume / changelog / opener tabs per job
 
 ---
 

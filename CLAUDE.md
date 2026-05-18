@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 任何代码或细节实现之前，**必读** [docs/superpowers/specs/2026-05-02-screenshot-input-design.md](docs/superpowers/specs/2026-05-02-screenshot-input-design.md)。这份 spec 定义了：
 - 4 个 skill 的职责边界（不要跨界）
-- 完整数据流（截图输入 → JD 解析 → shortlist.md）
+- 完整数据流（截图输入 → JD 解析 → shortlist.html）
 - 三处关键 schema：JD frontmatter / analysis frontmatter / shortlist 条目
 - 缓存策略（JD pool / analysis 两层）
 - 改写伦理红线（写进 analyzer/tailor 的 prompt）
@@ -60,7 +60,7 @@ job-hunt              ← 主：编排 + 缓存管理 + 排序 + shortlist
 ## 目录约定
 
 - **work_dir = Claude 启动时的当前目录（`pwd`）**，无任何 fallback，不再使用 `~/.job-hunt/`
-- 用户简历支持 `.md` 或 `.docx`（`.docx` 用 `docx` skill 解析），内部统一为 MD
+- 用户简历**只支持** `.md` 文件 或 **直接粘贴文本**——版式文件（PDF/Word）跨环境解析容易失真或失败，且依赖各种 Python/CLI 工具，不可靠；统一改为让用户贴文本，零依赖
 - 定制简历输出**只 MD**，用户自己转 PDF 投递
 - JD 缓存：`<work_dir>/.work/jd-pool/公司名-职位名-YYYYMMDDTHHmm.md`（无公司名时用 `screenshot-YYYYMMDDTHHmm.md`）
 - 输出：`<work_dir>/output/<run_id>/`
@@ -93,14 +93,14 @@ Claude Code 的运行模型：
 
 ## 依赖的外部 skill
 
-- `docx`（解析用户提供的 .docx 简历）
+- 无（简历只接收 .md 或粘贴文本，不依赖外部 skill）
 
 ## 当前状态
 
 - ✅ 设计文档、实现计划已完成
 - ✅ fetcher 改为截图解析，支持全平台，去掉 bb-browser 依赖
 - ✅ 输入流程简化：截图 + 简历文本，无需配置文件
-- ✅ 排序简化为 match score，shortlist 双路输出
+- ✅ 排序简化为 match score；输出**只产 shortlist.html**（不再生成 shortlist.md，避免冗余和聊天屏幕被刷屏）
 - ✅ subcommand 统一为 `fetch`（非 `import`），state.json 对应字段为 `fetched`
 - ✅ analyzer/tailor 路径 bug 修复（`boss-<id>` → `<id>`）
 - ✅ STAR 对齐分析移入 tailor Step 1.0（analyzer 只输出评分，不生成改写建议）
@@ -123,3 +123,4 @@ Claude Code 的运行模型：
 - ✅ 全流程自动化强化：约束范围从「Step 4-7」扩展到「Step 3 fetcher 返回后」；fetcher/analyzer/tailor 三个子 skill 返回后均明确禁止回显/复述返回内容；fetcher 不再输出 ID 列表，主 skill 改为扫描 jd-pool 目录按 run_id 自取 ID，彻底切断对子 skill 文字输出的依赖
 - ✅ tailor 修复顶层章节顺序误判：规则示例中的章节顺序（如「专业技能/工作经历/项目经历」）被 Claude 误读为规范顺序，导致与原简历不符时自动"纠正"；现已明确括号内仅举例说明哪类章节属于顶层章节，不代表其应有顺序，实际顺序以原简历为准
 - ✅ Step 2.5 修复评估绕过过滤规则的问题：规则一→二→三已明确为强制先决条件，新增"不得根据公司名/职位名推断工作内容进行评估"约束，评估维度入口前加兜底 stop 条件，防止空区块（如只有头部行的「工作及教育经历」）被错误评估
+- ✅ Step 7 新增 HTML 输出：生成 shortlist.html（静态单文件，内嵌思源黑体+marked+html2pdf），左列表+右详情响应式布局，简历可编辑+localStorage 持久化，每岗位一键导出 PDF；保留所有原 MD 输出

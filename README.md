@@ -1,4 +1,4 @@
-# job-hunt · 简历雷达-求职助手 skill
+# job-hunt · 求职猎手-简历助手 skill
 
 [English](README.en.md)
 
@@ -68,7 +68,8 @@ npx skills add JPCwhj/job-hunting -g
 **流程如下**：
 1. 提供简历（发文件、告知路径，或直接粘贴文本）
 2. AI 自动评估简历质量，给出逐段建议；可选择修改后重传，或直接继续
-3. 上传招聘平台岗位详情页截图（可一次多张，也可分批发送）
+3. 上传招聘平台岗位详情页截图
+   📌 一张截图 = 一个岗位（信息长请用长截图截全）；截图里至少有岗位名（公司名可选）
 4. 截图确认后自动进入匹配分析与简历定制，无需额外触发
 5. 查看 shortlist，回填占位符，手动投递
 
@@ -90,10 +91,11 @@ npx skills add JPCwhj/job-hunting -g
 ## 前置条件
 
 
-- **你的大模型有视觉能力，能识别图片**
+- **你的大模型有视觉能力，能识别图片**（用于截图解析）
 - [Claude Code](https://github.com/anthropics/claude-code) 已安装（或任何支持 Skill 规范的 Agent，如 Codex、OpenClaw 等）
-- 如果简历是 Word 文档（`.docx` 或 `.doc`），请先安装 [docx skill](https://skills.sh/anthropics/skills/docx)
-- 任意招聘平台（Boss直聘、智联招聘、前程无忧、猎聘、拉勾等），截取感兴趣的岗位详情页截图即可
+- 简历需准备成 **`.md` 文件** 或 **可直接粘贴的文本**——版式文件（PDF/Word）请先用阅读器全选复制内容或另存为 `.md` 后再发
+- 任意招聘平台（Boss直聘、智联招聘、前程无忧、猎聘、拉勾等）截取岗位详情页截图即可
+- 📌 **截图规则：一张截图 = 一个岗位**。岗位信息长就用长截图把内容截在一张图里；截图里**至少要有岗位名称**（公司名可选，没截到也行）
 
 
 ---
@@ -108,7 +110,7 @@ npx skills add JPCwhj/job-hunting -g
     │   └── jd-pool/              ← 解析后的 JD 缓存
     └── output/
         └── 2026-05-02-1430/      ← 每次运行一个目录
-            ├── shortlist.md      ← 最终排序结果
+            ├── shortlist.html    ← 最终视图（在浏览器打开）
             ├── state.json        ← 断点续跑状态
             └── tailored/
                 └── <公司名-职位名>/
@@ -116,6 +118,15 @@ npx skills add JPCwhj/job-hunting -g
                     ├── opener.md     ← 开场白
                     └── changelog.md  ← AI 改了什么（透明度保险）
 ```
+
+### 输出格式
+
+`shortlist.html`：静态单 HTML 文件，复制路径到浏览器打开即可：
+- 桌面 + 移动端响应式
+- 按匹配度排序查看所有岗位
+- 简历可在网页直接编辑，自动保存到浏览器本地
+- 每个岗位一键导出 PDF（A4，内嵌思源黑体跨平台一致）
+- 切换查看每个岗位的简历 / 改动 / 开场白
 
 ---
 
