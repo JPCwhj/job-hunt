@@ -68,7 +68,8 @@ npx skills add JPCwhj/job-hunting -g
 **Workflow**:
 1. Provide your resume (upload file, give a path, or paste text directly)
 2. AI evaluates resume quality section by section — revise and re-upload, or continue as-is
-3. Upload job listing screenshots (multiple at once, or in batches)
+3. Upload job listing screenshots
+   📌 One screenshot = one job (use long screenshot for long postings); each screenshot must include at least the job title (company name optional)
 4. After confirming screenshots, analysis and tailoring run automatically — no extra trigger needed
 5. Review shortlist, fill in placeholders, apply manually
 
@@ -93,6 +94,7 @@ npx skills add JPCwhj/job-hunting -g
 - [Claude Code](https://github.com/anthropics/claude-code) installed, or any agent that supports the Skill spec (e.g. Codex, OpenClaw)
 - Resume must be prepared as a **`.md` file** or **plain text ready to paste** — for PDF/Word resumes, open them in a reader, select-all and copy the content, or save as `.md` before sending
 - Any major hiring platform — just screenshot the job detail page
+- 📌 **Screenshot rule: one screenshot = one job**. Use long screenshot to capture the full posting in one image; each screenshot must contain at least the job title (company name optional)
 
 ---
 
