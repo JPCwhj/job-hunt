@@ -512,91 +512,206 @@ shortlist 内容格式：
 
 **生成 shortlist.html**（在 shortlist.md 写入之后执行，全流程模式下不输出任何文字）：
 
-数据 schema：
+**重要原则：聚合数据完全由 Python 脚本自动完成**，LLM **不需要**也**不应该**手工构造 JSON。Claude 只需替换脚本里的 `DATA_DIR` 和 `RUN_ID` 两个变量然后执行，所有字段（包括 resume_md/opener_md/changelog_md 三个 MD 文件全文）由脚本自己扫描读取，**不允许遗漏字段**。
 
-```json
-{
-  "run_id": "<run_id>",
-  "generated_at": "<ISO 8601 时间>",
-  "jobs": [
-    {
-      "id": "<jd id>",
-      "rank": 1,
-      "company": "<frontmatter company.name>",
-      "title": "<frontmatter title>",
-      "match_score": "<scores.total>",
-      "salary_range": "<frontmatter salary.range>",
-      "monthly_count": "<frontmatter salary.monthly_count，null 时为 null>",
-      "city": "<frontmatter location.city>",
-      "district": "<frontmatter location.district 或空字符串>",
-      "scores": {
-        "hard_skills": "<analysis scores.hard_skills>",
-        "experience_depth": "<analysis scores.experience_depth>",
-        "domain_fit": "<analysis scores.domain_fit>",
-        "soft_fit": "<analysis scores.soft_fit>"
-      },
-      "one_liner": "<analysis 一句话评估>",
-      "resume_md": "<tailored/<id>/resume.md 全文>",
-      "opener_md": "<tailored/<id>/opener.md 全文>",
-      "changelog_md": "<tailored/<id>/changelog.md 全文>"
-    }
-  ]
-}
-```
-
-执行步骤：
-
-1. Claude 用 Bash 把 jobs[] 数组写到临时文件 `<data_dir>/output/<run_id>/.jobs.json`
-2. Claude 用 Bash 执行下面的 Python 脚本（变量替换为实际路径与 run_id）
+执行方式：Claude 用 Bash 执行下面这段 Python 脚本（**仅替换最上方 DATA_DIR 和 RUN_ID 两个常量，脚本主体一字不动**）：
 
 ```bash
 python3 - <<'PY'
 import json
 import datetime
+import re
 import webbrowser
 from pathlib import Path
 
-DATA_DIR = "<data_dir>"   # 替换为绝对路径
-RUN_ID = "<run_id>"        # 替换为实际 run_id
+DATA_DIR = "<data_dir>"     # ← 替换为绝对路径（如 /Users/xxx/jobHuntSkillData）
+RUN_ID = "<run_id>"          # ← 替换为实际 run_id（如 2026-05-18-1836）
 
+# ============ 工具函数 ============
+
+def parse_frontmatter(text):
+    """从 markdown 文本里解析 YAML frontmatter，返回 (dict, body_text)。
+    支持顶层标量、二级嵌套对象、简单数组。无 frontmatter 时返回 ({}, text)。"""
+    if not text.startswith("---\n"):
+        return {}, text
+    end = text.find("\n---", 4)
+    if end < 0:
+        return {}, text
+    fm_text = text[4:end]
+    body = text[end+4:].lstrip("\n")
+    result = {}
+    current_key = None
+    for line in fm_text.split("\n"):
+        if not line.strip() or line.strip().startswith("#"):
+            continue
+        stripped = line.lstrip()
+        indent = len(line) - len(stripped)
+        if indent == 0:
+            if ":" not in stripped:
+                continue
+            key, _, val = stripped.partition(":")
+            key = key.strip()
+            val = val.strip()
+            if val == "":
+                result[key] = {}
+                current_key = key
+            else:
+                result[key] = _coerce(val)
+                current_key = None
+        elif current_key is not None:
+            # 二级嵌套
+            if ":" not in stripped:
+                continue
+            k, _, v = stripped.partition(":")
+            result[current_key][k.strip()] = _coerce(v.strip())
+    return result, body
+
+def _coerce(val):
+    """把 YAML 标量字符串转为合适的 Python 类型。"""
+    if val == "" or val.lower() in ("null", "~"):
+        return None
+    if val.lower() == "true":
+        return True
+    if val.lower() == "false":
+        return False
+    # 字符串去引号
+    if (val.startswith('"') and val.endswith('"')) or \
+       (val.startswith("'") and val.endswith("'")):
+        return val[1:-1]
+    # 数字
+    try:
+        if "." in val:
+            return float(val)
+        return int(val)
+    except ValueError:
+        return val
+
+def extract_one_liner(analysis_body):
+    """从 analysis.md 正文里提取「一句话评估」。"""
+    # 匹配「## 一句话评估」「### 一句话评估」等任意层级标题后的第一段
+    m = re.search(r"^#+\s*一句话评估\s*\n+([^\n#]+)", analysis_body, re.MULTILINE)
+    if m:
+        return m.group(1).strip()
+    # 兜底：找含「一句话」的行
+    m = re.search(r"一句话[评估总结评价]*[:：]\s*(.+)", analysis_body)
+    if m:
+        return m.group(1).strip()
+    return ""
+
+def safe_read(path):
+    """文件不存在返回空字符串。"""
+    try:
+        return Path(path).read_text()
+    except (FileNotFoundError, IsADirectoryError):
+        return ""
+
+# ============ 主流程 ============
+
+data_dir = Path(DATA_DIR)
+jd_pool = data_dir / ".work/jd-pool"
+tailored_root = data_dir / f"output/{RUN_ID}/tailored"
 template_path = Path.home() / ".claude/skills/job-hunt/template.html"
+
 if not template_path.exists():
     print(f"SKIP: template not found at {template_path}")
     raise SystemExit(0)
 
-jobs_path = Path(f"{DATA_DIR}/output/{RUN_ID}/.jobs.json")
+if not jd_pool.exists():
+    print(f"ERROR: jd-pool not found at {jd_pool}")
+    raise SystemExit(1)
+
+# 1. 收集所有 analysis 文件并构造 jobs[]
+jobs = []
+for analysis_file in jd_pool.glob("*.analysis.md"):
+    jd_id = analysis_file.name.replace(".analysis.md", "")
+    jd_file = jd_pool / f"{jd_id}.md"
+    if not jd_file.exists():
+        print(f"WARN: skip {jd_id} - JD file missing")
+        continue
+
+    jd_fm, _ = parse_frontmatter(jd_file.read_text())
+    ana_fm, ana_body = parse_frontmatter(analysis_file.read_text())
+
+    tailored_dir = tailored_root / jd_id
+    resume_md = safe_read(tailored_dir / "resume.md")
+    opener_md = safe_read(tailored_dir / "opener.md")
+    changelog_md = safe_read(tailored_dir / "changelog.md")
+
+    scores = ana_fm.get("scores", {}) or {}
+    company = jd_fm.get("company", {}) or {}
+    salary = jd_fm.get("salary", {}) or {}
+    location = jd_fm.get("location", {}) or {}
+
+    jobs.append({
+        "id": jd_id,
+        "company": company.get("name", ""),
+        "title": jd_fm.get("title", ""),
+        "match_score": scores.get("total", 0),
+        "salary_range": salary.get("range", ""),
+        "monthly_count": salary.get("monthly_count"),
+        "city": location.get("city", ""),
+        "district": location.get("district", "") or "",
+        "scores": {
+            "hard_skills": scores.get("hard_skills", 0),
+            "experience_depth": scores.get("experience_depth", 0),
+            "domain_fit": scores.get("domain_fit", 0),
+            "soft_fit": scores.get("soft_fit", 0),
+        },
+        "one_liner": extract_one_liner(ana_body),
+        "resume_md": resume_md,
+        "opener_md": opener_md,
+        "changelog_md": changelog_md,
+    })
+
+# 2. 按 match_score 降序排，赋 rank
+def score_key(j):
+    s = j["match_score"]
+    try:
+        return -int(s)
+    except (TypeError, ValueError):
+        return 0
+
+jobs.sort(key=score_key)
+for i, j in enumerate(jobs, 1):
+    j["rank"] = i
+
+print(f"INFO: aggregated {len(jobs)} jobs")
+for j in jobs:
+    print(f"  - rank {j['rank']}: {j['company']} · {j['title']} (resume={len(j['resume_md'])}b, opener={len(j['opener_md'])}b, changelog={len(j['changelog_md'])}b)")
+
+# 3. 拼装最终 JSON
 data = {
     "run_id": RUN_ID,
     "generated_at": datetime.datetime.now().isoformat(timespec="seconds"),
-    "jobs": json.loads(jobs_path.read_text()),
+    "jobs": jobs,
 }
 
+# 4. 注入模板
 template = template_path.read_text()
 json_str = json.dumps(data, ensure_ascii=False)
-# 防止 </script> 截断
-json_str = json_str.replace("</script>", "<\\/script>")
+json_str = json_str.replace("</script>", "<\\/script>")  # 防止 </script> 截断
 html = template.replace("__DATA_PLACEHOLDER__", json_str)
 
-out_path = Path(f"{DATA_DIR}/output/{RUN_ID}/shortlist.html")
+out_path = data_dir / f"output/{RUN_ID}/shortlist.html"
 out_path.write_text(html)
+print(f"OK: {out_path} ({out_path.stat().st_size} bytes)")
 
-jobs_path.unlink()
-
-# 自动打开默认浏览器（跨平台：webbrowser 模块在 Mac/Win/Linux 都能用）
-file_url = out_path.absolute().as_uri()  # 输出形如 file:///Users/.../shortlist.html
+# 5. 自动打开默认浏览器
+file_url = out_path.absolute().as_uri()
+print(f"URL: {file_url}")
 try:
     webbrowser.open(file_url)
-    print(f"OK: {out_path} ({out_path.stat().st_size} bytes)")
-    print(f"URL: {file_url}")
     print("OPENED: browser launched")
 except Exception as e:
-    print(f"OK: {out_path} ({out_path.stat().st_size} bytes)")
-    print(f"URL: {file_url}")
     print(f"OPEN_FAILED: {e}")
 PY
 ```
 
-**模板缺失时的降级**：脚本检测到模板不存在则打印 `SKIP: ...` 退出 0，主流程不中断。最后告知用户时根据是否 SKIP 决定是否提示 HTML 路径。
+**脚本的关键约束**：
+- **LLM 不构造 JSON**，只替换 DATA_DIR / RUN_ID 两个常量
+- **resume_md / opener_md / changelog_md 由脚本自己读文件**，遗漏字段在源头被杜绝
+- **空文件优雅处理**：tailored 目录或某个 md 文件不存在 → 该字段为空字符串，不会让脚本崩
+- **缺失模板优雅降级**：template.html 不存在 → 打印 `SKIP:` 退出 0，主流程不中断
 
 更新 state.json `phase` 为 `"done"` 之后，**必须**在聊天里输出最终消息——按上方「最终消息的输出模板」执行（shortlist 完整内容 + 完成提示）。
 
