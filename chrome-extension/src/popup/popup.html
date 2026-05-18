@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+  <title>job-hunt 收藏夹</title>
+</head>
+<body>
+  <div class="jh-popup">
+    <header class="jh-header">
+      <div class="jh-title">已收藏 <span id="jh-count">0</span> 个岗位</div>
+      <div class="jh-actions">
+        <button id="jh-select-all" class="jh-link">全选</button>
+        <button id="jh-clear" class="jh-link jh-danger">清空</button>
+      </div>
+    </header>
+    <div id="jh-list" class="jh-list"></div>
+    <footer class="jh-footer">
+      <button id="jh-export" class="jh-export-btn" disabled>📥 导出选中的 0 个</button>
+    </footer>
+  </div>
+  <script src="../lib/schema.js"></script>
+  <script src="../lib/storage.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

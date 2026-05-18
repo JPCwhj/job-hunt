@@ -1,0 +1,66 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 13px;
+  color: #2b2b2b;
+  width: 360px;
+  max-height: 520px;
+}
+.jh-popup { display: flex; flex-direction: column; height: 100%; }
+.jh-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  background: #f5f7fa;
+  border-bottom: 1px solid #e4e7ec;
+}
+.jh-title { font-weight: 600; }
+.jh-title #jh-count { color: #00b38a; }
+.jh-actions { display: flex; gap: 8px; }
+.jh-link {
+  background: none; border: none; color: #4a90e2;
+  font-size: 12px; cursor: pointer; padding: 2px 4px;
+}
+.jh-link:hover { text-decoration: underline; }
+.jh-link.jh-danger { color: #e74c3c; }
+.jh-list { flex: 1; overflow-y: auto; max-height: 380px; }
+.jh-empty {
+  padding: 40px 20px; text-align: center;
+  color: #888; font-size: 12px; line-height: 1.6;
+}
+.jh-item {
+  display: flex; align-items: flex-start;
+  padding: 10px 14px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.jh-item:hover { background: #fafbfc; }
+.jh-item input[type="checkbox"] { margin-top: 2px; margin-right: 10px; }
+.jh-item-main { flex: 1; min-width: 0; }
+.jh-item-title {
+  font-weight: 500; color: #2b2b2b; margin-bottom: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.jh-item-meta {
+  font-size: 11px; color: #888;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.jh-item-remove {
+  margin-left: 8px;
+  background: none; border: none; color: #c0c4cc;
+  cursor: pointer; font-size: 14px;
+}
+.jh-item-remove:hover { color: #e74c3c; }
+.jh-footer {
+  padding: 10px 14px;
+  border-top: 1px solid #e4e7ec;
+  background: #fff;
+}
+.jh-export-btn {
+  width: 100%; padding: 10px;
+  background: #00b38a; color: #fff; border: none;
+  border-radius: 4px; font-size: 13px; font-weight: 500;
+  cursor: pointer;
+}
+.jh-export-btn:disabled { background: #c0c4cc; cursor: not-allowed; }
+.jh-export-btn:not(:disabled):hover { background: #009974; }
