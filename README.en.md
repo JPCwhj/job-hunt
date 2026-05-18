@@ -8,7 +8,7 @@ Author: [Douyin](https://www.douyin.com/user/MS4wLjABAAAAWo2xyaSERZ6A7j3Ln09ZOlL
 
 HR spends less than 10 seconds scanning a resume — **and how well your resume matches the JD is what actually determines whether you pass the first cut.**
 
-Screenshot any job listing page, AI parses the JD, runs a deep comparison against your resume, generates a tailored resume + HR opener + change log just for this role, then ranks everything by match score into your shortlist.
+**Send 5, 10, or 20 job postings at once — batch-process them all. AI runs the full pipeline (parse → match → tailor → opener) on every JD in parallel, then ranks them by match score in a single HTML, so you instantly see which roles to prioritize.**
 
 > You decide who to apply to. AI gets every application ready.
 
@@ -21,6 +21,20 @@ Screenshot any job listing page, AI parses the JD, runs a deep comparison agains
 3. **Match analysis**: Aligns each JD with your resume using STAR framework, outputting scores across 4 dimensions: Hard Skills / Experience Depth / Domain Fit / Soft Skills.
 4. **Tailored materials**: Re-focuses your resume for each JD — moves the most relevant experience to the top, sharpens match points, so the HR reading it can immediately see you fit the role. Comes with an opening message + change log.
 5. **Shortlist output**: All positions ranked by match score in a single static HTML file. Open in browser to browse each job's tailored resume / changelog / opener; resume can be edited inline and exported to PDF with one click (Chinese fonts embedded for cross-platform consistency)
+
+---
+
+## ⚡ Batch Processing is the Core Capability
+
+**This isn't "let AI write you a resume" — it's "let AI tailor N resumes simultaneously, one per job."**
+
+| Scenario | Manual Approach | With job-hunt |
+|---|---|---|
+| Apply to 10 jobs | Research each JD, edit resume, write opener — **~1 day** | Send 10 screenshots, **all 10 tailored packages done in minutes** |
+| Decide where to apply | Gut feeling | Ranked by match score — **data-driven** |
+| Evaluation criteria | Subjective, fatigue-prone | AI applies the same STAR framework — **consistent** |
+
+However many job screenshots you send, that's how many tailored resumes you get back — 5, 10, 20, whatever.
 
 ---
 
