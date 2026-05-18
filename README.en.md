@@ -20,7 +20,7 @@ Screenshot any job listing page, AI parses the JD, runs a deep comparison agains
 2. **JD parsing**: Upload screenshots of job listing pages from any major hiring platform. AI extracts structured data — title, salary, requirements, company size, etc.
 3. **Match analysis**: Aligns each JD with your resume using STAR framework, outputting scores across 4 dimensions: Hard Skills / Experience Depth / Domain Fit / Soft Skills.
 4. **Tailored materials**: Re-focuses your resume for each JD — moves the most relevant experience to the top, sharpens match points, so the HR reading it can immediately see you fit the role. Comes with an opening message + change log.
-5. **Shortlist output**: All positions ranked by match score, highest first.
+5. **Shortlist output**: All positions ranked by match score in a single static HTML file. Open in browser to browse each job's tailored resume / changelog / opener; resume can be edited inline and exported to PDF with one click (Chinese fonts embedded for cross-platform consistency)
 
 ---
 
