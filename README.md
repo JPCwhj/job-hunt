@@ -93,6 +93,26 @@ npx skills add JPCwhj/job-hunt -g -y
 
 ---
 
+## 浏览器插件（可选，仅 Boss 直聘）
+
+如果你主要在 Boss 直聘投递，可以装一个浏览器插件代替截图，体验更快：
+
+1. 克隆本仓库：`git clone https://github.com/JPCwhj/job-hunt.git`
+2. 打开 Chrome，访问 `chrome://extensions/`
+3. 右上角打开"开发者模式"
+4. 点"加载已解压的扩展程序"，选择仓库下的 `chrome-extension/` 目录
+5. 安装成功后，在 Boss 详情页右下角会出现"⭐ 加入清单"按钮
+
+**使用流程**：
+- Boss 详情页点"⭐ 加入清单"，攒到一批
+- 点浏览器右上角插件图标，勾选要导出的岗位
+- 点"导出"，文件下载到浏览器默认 Downloads 目录
+- 把 `.jobs.json` 文件拖给 Claude Code 的 `/job-hunt` 流程
+
+**其他平台请继续用截图方式**。
+
+---
+
 ## 使用方式
 
 **方式一**：启动任意支持 skill 的 agent 工具，运行对应命令：

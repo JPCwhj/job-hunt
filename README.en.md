@@ -93,6 +93,26 @@ npx skills add JPCwhj/job-hunt -g -y
 
 ---
 
+## Browser Extension (Optional, Boss Zhipin only)
+
+If you primarily apply via Boss Zhipin, install the browser extension to skip screenshots:
+
+1. Clone the repo: `git clone https://github.com/JPCwhj/job-hunt.git`
+2. Open Chrome → `chrome://extensions/`
+3. Enable "Developer mode" (top right)
+4. Click "Load unpacked", select the `chrome-extension/` folder in the repo
+5. On a Boss Zhipin job detail page, a "⭐ Add to list" floating button will appear
+
+**Usage**:
+- Click "⭐ Add to list" on any detail page
+- Click the extension icon, select jobs, click "Export"
+- The file downloads to your default Downloads folder
+- Drag the `.jobs.json` file into Claude Code's `/job-hunt` flow
+
+**For other platforms, continue using screenshots**.
+
+---
+
 ## Usage
 
 **Option 1**: Launch any skill-compatible agent tool and run the corresponding command:
