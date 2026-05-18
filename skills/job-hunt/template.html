@@ -144,6 +144,10 @@
     /* changelog 中"需用户回填"高亮 */
     .changelog-fill { background: #fef3c7; padding: 12px; border-radius: 6px; border-left: 3px solid #f59e0b; }
 
+    /* 简历中的占位符高亮：[请填写：xxx] 红色（必填），[需用户确认] 黄色（推断） */
+    .ph-fill { background: #fee2e2; color: #991b1b; padding: 1px 6px; border-radius: 4px; font-weight: 600; border: 1px dashed #dc2626; }
+    .ph-confirm { background: #fef3c7; color: #92400e; padding: 1px 6px; border-radius: 4px; font-weight: 600; border: 1px dashed #d97706; }
+
     /* === 操作栏 === */
     .action-bar {
       margin-top: 16px;
@@ -266,7 +270,13 @@
     function loadResumeHtml(job) {
       const saved = localStorage.getItem(resumeKey(job.id));
       if (saved !== null) return saved;
-      return marked.parse(job.resume_md || '');
+      return highlightPlaceholders(marked.parse(job.resume_md || ''));
+    }
+    // 把 [请填写：xxx] 和 [需用户确认] 包成高亮 span（仅在首次从 MD 渲染时调用）
+    function highlightPlaceholders(html) {
+      return html
+        .replace(/\[请填写：([^\]]+)\]/g, '<span class="ph-fill" title="必填：请补全此处内容">[请填写：$1]</span>')
+        .replace(/\[需用户确认\]/g, '<span class="ph-confirm" title="AI 推断的内容，请核对真实性">[需用户确认]</span>');
     }
     function saveResumeHtml(jobId, html) {
       localStorage.setItem(resumeKey(jobId), html);
@@ -340,8 +350,8 @@
 
         <div class="tabs">
           <button class="tab${currentTab==='resume'?' active':''}" data-tab="resume">📄 简历</button>
-          <button class="tab${currentTab==='opener'?' active':''}" data-tab="opener">💬 开场白</button>
           <button class="tab${currentTab==='changelog'?' active':''}" data-tab="changelog">📋 改动</button>
+          <button class="tab${currentTab==='opener'?' active':''}" data-tab="opener">💬 开场白</button>
         </div>
 
         <div id="tab-content" class="tab-content"></div>
