@@ -90,9 +90,9 @@ npx skills add JPCwhj/job-hunting -g
 ## 前置条件
 
 
-- **你的大模型有视觉能力，能识别图片**
+- **你的大模型有视觉能力，能识别图片**（用于截图解析）
 - [Claude Code](https://github.com/anthropics/claude-code) 已安装（或任何支持 Skill 规范的 Agent，如 Codex、OpenClaw 等）
-- 如果简历是 Word 文档（`.docx` 或 `.doc`），请先安装 [docx skill](https://skills.sh/anthropics/skills/docx)
+- 简历需准备成 **`.md` 文件** 或 **可直接粘贴的文本**——版式文件（PDF/Word）请先用阅读器全选复制内容或另存为 `.md` 后再发
 - 任意招聘平台（Boss直聘、智联招聘、前程无忧、猎聘、拉勾等），截取感兴趣的岗位详情页截图即可
 
 

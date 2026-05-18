@@ -60,7 +60,7 @@ job-hunt              ← 主：编排 + 缓存管理 + 排序 + shortlist
 ## 目录约定
 
 - **work_dir = Claude 启动时的当前目录（`pwd`）**，无任何 fallback，不再使用 `~/.job-hunt/`
-- 用户简历支持 `.md` / `.docx` / `.doc` / `.pdf`（`.docx/.doc` 用 `docx` skill 解析，`.pdf` 用 `pdf` skill 解析），内部统一为 MD
+- 用户简历**只支持** `.md` 文件 或 **直接粘贴文本**——版式文件（PDF/Word）跨环境解析容易失真或失败，且依赖各种 Python/CLI 工具，不可靠；统一改为让用户贴文本，零依赖
 - 定制简历输出**只 MD**，用户自己转 PDF 投递
 - JD 缓存：`<work_dir>/.work/jd-pool/公司名-职位名-YYYYMMDDTHHmm.md`（无公司名时用 `screenshot-YYYYMMDDTHHmm.md`）
 - 输出：`<work_dir>/output/<run_id>/`
@@ -93,8 +93,7 @@ Claude Code 的运行模型：
 
 ## 依赖的外部 skill
 
-- `docx`（解析用户提供的 .docx/.doc 简历）
-- `pdf`（解析用户提供的 .pdf 简历）
+- 无（简历只接收 .md 或粘贴文本，不依赖外部 skill）
 
 ## 当前状态
 
