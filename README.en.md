@@ -74,7 +74,7 @@ A ready-to-send HR opening message tailored to the current position (kept within
 ## Install or Update
 
 ```bash
-npx skills add JPCwhj/job-hunting -g
+npx skills add JPCwhj/job-hunting -g -y
 ```
 
 ---
