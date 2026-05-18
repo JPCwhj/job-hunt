@@ -108,7 +108,7 @@ npx skills add JPCwhj/job-hunting -g
     │   └── jd-pool/              ← parsed JD cache
     └── output/
         └── 2026-05-02-1430/
-            ├── shortlist.md      ← final ranked results
+            ├── shortlist.html    ← final view (open in browser)
             ├── state.json        ← checkpoint state
             └── tailored/
                 └── <company-title>/
@@ -117,15 +117,14 @@ npx skills add JPCwhj/job-hunting -g
                     └── changelog.md  ← what AI changed (transparency log)
 ```
 
-### Output Formats
+### Output Format
 
-Each run produces two shortlist files:
-
-- `shortlist.md`: Markdown summary for CLI viewing
-- `shortlist.html`: A standalone static HTML file, double-click to open in browser
-  - Desktop + mobile responsive
-  - Resume can be edited inline; edits auto-saved to browser localStorage
-  - One-click PDF export per job (A4, embedded Source Han Sans for cross-platform consistency)
+`shortlist.html`: A standalone static HTML file. Copy the path into your browser to open:
+- Desktop + mobile responsive
+- All jobs ranked by match score
+- Resume can be edited inline; edits auto-saved to browser localStorage
+- One-click PDF export per job (A4, embedded Source Han Sans for cross-platform consistency)
+- Switch between resume / changelog / opener tabs per job
 
 ---
 

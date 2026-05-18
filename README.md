@@ -110,7 +110,7 @@ npx skills add JPCwhj/job-hunting -g
     │   └── jd-pool/              ← 解析后的 JD 缓存
     └── output/
         └── 2026-05-02-1430/      ← 每次运行一个目录
-            ├── shortlist.md      ← 最终排序结果
+            ├── shortlist.html    ← 最终视图（在浏览器打开）
             ├── state.json        ← 断点续跑状态
             └── tailored/
                 └── <公司名-职位名>/
@@ -121,13 +121,12 @@ npx skills add JPCwhj/job-hunting -g
 
 ### 输出格式
 
-每次运行产出两份 shortlist：
-
-- `shortlist.md`：Markdown 汇总，适合命令行查看
-- `shortlist.html`：静态单 HTML 文件，双击在浏览器打开
-  - 桌面 + 移动端响应式
-  - 简历可在网页直接编辑，自动保存到浏览器本地
-  - 每个岗位一键导出 PDF（A4，内嵌思源黑体跨平台一致）
+`shortlist.html`：静态单 HTML 文件，复制路径到浏览器打开即可：
+- 桌面 + 移动端响应式
+- 按匹配度排序查看所有岗位
+- 简历可在网页直接编辑，自动保存到浏览器本地
+- 每个岗位一键导出 PDF（A4，内嵌思源黑体跨平台一致）
+- 切换查看每个岗位的简历 / 改动 / 开场白
 
 ---
 

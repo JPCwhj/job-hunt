@@ -462,65 +462,15 @@ tailor 返回后，用 Bash 工具更新 state.json `phase` 为 `"tailored"`。
 
 ---
 
-## Step 7：生成 shortlist.md
+## Step 7：生成 shortlist.html
 
-（全流程最后一步）
+（全流程最后一步，**只产 HTML，不产 MD 文件**）
 
-**执行顺序（严格按此顺序，不要打乱）：**
+**执行顺序（严格按此顺序）：**
 
-1. 用 Bash 工具：把 shortlist 内容写入 `<data_dir>/output/<run_id>/shortlist.md` 文件
-2. 用 Bash 工具：聚合 jobs JSON 写入 `.jobs.json` 临时文件
-3. 用 Bash 工具：执行 Python 脚本生成 `shortlist.html`
-4. 用 Bash 工具：更新 `state.json` 的 `phase` 为 `"done"`
-5. **最后一步**：在聊天里输出**一条完整消息**，包含两部分：
-   - 第一部分：shortlist.md 的完整内容（让用户立即看到排名概览）
-   - 第二部分：紧跟在 shortlist 内容之后的**完成提示**（含 MD 和 HTML 文件路径）—— **这部分是必输出项，不得遗漏**
-
-**最终消息的输出模板：**
-
-````
-# 求职 Shortlist · <run_id>
-
-<...shortlist 完整内容，格式见下文...>
-
----
-
-✅ 全部完成！
-
-- 📄 shortlist：`<data_dir>/output/<run_id>/shortlist.md`
-- 🌐 HTML 视图：`<data_dir>/output/<run_id>/shortlist.html`（双击在浏览器打开，可编辑简历并导出 PDF）
-````
-
-⚠️ **关键约束：完成提示（✅ 全部完成！...）必须是整条消息的最后一段**，不得省略、不得放在中间。用户依赖这段提示才能找到 HTML 文件路径。
-
-shortlist 内容格式：
-
-```markdown
-# 求职 Shortlist · <run_id>
-
-## 概况
-- 导入岗位：<stages.fetched 数量> 个
-- 完成分析：<stages.analyzed 数量> 个
-- 已生成定制简历：<stages.tailored 数量> 个
-
-## 推荐排名（按匹配度）
-
-### 🥇 1. <company.name> · <title> · 匹配度 <match_score> 分
-- 💰 <salary.range><若 monthly_count 不为 null 追加"·<monthly_count>薪"> | 📍 <location.city>·<location.district>
-- 📊 分项：硬技能 <scores.hard_skills> / 经验 <scores.experience_depth> / 行业 <scores.domain_fit> / 软性 <scores.soft_fit>
-- 💡 <analysis 文件中的「一句话评估」>
-- 📄 [定制简历](tailored/<id>/resume.md) · 📋 [改动](tailored/<id>/changelog.md) · 💬 [开场白](tailored/<id>/opener.md)
-- ⚠️ 投递前：<从 tailored/<id>/changelog.md 的「⚠️ 需用户回填」节提取第一条；若该节不存在则省略此行>
-
-<重复以上格式直到最后一名>
-```
-
-**生成 shortlist.html**（在 shortlist.md 写入之后执行，全流程模式下不输出任何文字）：
-
-**重要原则**：聚合逻辑全部在独立的 Python 脚本 `~/.claude/skills/job-hunt/build_html.py` 里。Claude **不构造 JSON**，只负责：
-1. 检测 Python 命令（python3 / python）
-2. 用 Bash 调用脚本，传 `data_dir` 和 `run_id` 两个参数
-3. 根据脚本输出的标记（`OK:` / `SKIP:` / `OPENED:` / `OPEN_FAILED:` 等）决定最终消息文案
+1. 用 Bash 工具：探测 Python，调用 `build_html.py` 生成 shortlist.html
+2. 用 Bash 工具：更新 `state.json` 的 `phase` 为 `"done"`
+3. **最后一步**：在聊天里输出一条简短的完成消息（**只含 HTML 链接 + 操作提示**，不再输出排名 MD 概览，因为 HTML 视图就是用来看这些内容的）
 
 执行命令：
 
@@ -547,49 +497,52 @@ fi
 
 | 脚本 stdout 内容 | 状态 |
 |---|---|
-| `OK: ...`（无论后续 `OPENED` 或 `OPEN_FAILED`） | HTML 生成成功，提示用户手动打开（部分环境 Bash 沙箱无法触发系统浏览器，统一不依赖自动打开） |
+| `OK: ...`（无论后续 `OPENED` 或 `OPEN_FAILED`） | HTML 生成成功，提示用户复制链接到浏览器打开 |
 | `SKIP: template not found` | 模板文件缺失（极少发生，提示重装） |
-| `PYTHON_MISSING` | 系统没装 Python 3，引导用户安装 |
+| `PYTHON_MISSING` | 系统没装 Python 3，引导用户安装（流程失败，因为现在只产 HTML） |
 | `ERROR: ...`（stderr） | 其他错误，告知用户排查 |
 
 **脚本设计原则**：
-- LLM 完全不构造 JSON，**消除"漏字段"的故障模式**
-- resume_md / opener_md / changelog_md 由脚本扫描目录读取，零遗漏
+- LLM 完全不构造 JSON，由脚本自己扫描 jd-pool / tailored 目录读取所有字段
 - 空文件优雅处理：tailored 文件不存在 → 该字段为空字符串
 - 模板缺失优雅降级：template.html 不存在 → 打印 `SKIP:` 退出 0，主流程不中断
 
-更新 state.json `phase` 为 `"done"` 之后，**必须**在聊天里输出最终消息——按上方「最终消息的输出模板」执行（shortlist 完整内容 + 完成提示）。
+更新 state.json `phase` 为 `"done"` 之后，**必须**在聊天里输出最终消息——根据 Bash 输出的标记选对应文案。
 
-**完成提示文案根据 HTML 是否生成成功调整：**
+**最终消息文案（4 种分支）：**
 
-- **HTML 生成成功**（Python 脚本输出 `OK: ...`，**无论是否伴随 `OPENED` 或 `OPEN_FAILED`**——统一不依赖自动打开浏览器）：
+- **HTML 生成成功**（Python 脚本输出 `OK: ...`）：
   ```
-  ✅ 全部完成！
+  ✅ 全部完成！共生成 <N> 份定制简历。
 
-  - 📄 shortlist：<data_dir 绝对路径>/output/<run_id>/shortlist.md
-  - 🌐 HTML 视图：file://<data_dir 绝对路径>/output/<run_id>/shortlist.html
+  🌐 HTML 视图：file://<data_dir 绝对路径>/output/<run_id>/shortlist.html
 
   💡 复制上面的 file:// 链接到浏览器地址栏打开，即可查看完整简历视图。页面支持：
+     · 按匹配度排序查看所有岗位
      · 在网页上直接编辑简历（自动保存到浏览器本地）
      · 一键导出为 PDF（中文字体跨平台一致）
      · 切换查看每个岗位的简历 / 改动 / 开场白
   ```
 
+  其中 `<N>` 用 `state.json.stages.tailored` 数组长度填充。
+
 - **HTML 模板缺失**（Python 脚本输出 `SKIP: ...`）：
   ```
-  ✅ 全部完成！
+  ⚠️ 流程已完成，但 HTML 视图未生成。
 
-  - 📄 shortlist：<data_dir 绝对路径>/output/<run_id>/shortlist.md
-  - ⚠️ 未找到 ~/.claude/skills/job-hunt/template.html，跳过 HTML 输出。请重新安装 skill。
+  原因：未找到 ~/.claude/skills/job-hunt/template.html。
+  解决：请重新安装 skill（运行 install.sh 或 npx skills add）。
+
+  各岗位定制简历已写入：<data_dir 绝对路径>/output/<run_id>/tailored/
   ```
 
 - **Python 不可用**（Bash 输出 `PYTHON_MISSING`）：
   ```
-  ✅ shortlist.md 已生成：<data_dir 绝对路径>/output/<run_id>/shortlist.md
+  ⚠️ 流程已完成，但 HTML 视图未生成。
 
-  ⚠️ HTML 视图未生成：你的系统没有 Python 3。
+  原因：你的系统没有 Python 3。
 
-  📦 想要 HTML 视图（可编辑简历 + 一键导出 PDF），需要装 Python 3：
+  📦 装上 Python 3 之后即可补生成 HTML 视图：
 
      • Mac：终端跑 `xcode-select --install`（一次性，几分钟）
      • Windows：访问 https://python.org/downloads/ 下载安装
@@ -599,11 +552,22 @@ fi
   装完之后，跑这条命令补生成 HTML：
 
      python3 ~/.claude/skills/job-hunt/build_html.py "<data_dir 绝对路径>" "<run_id>"
+
+  各岗位定制简历已写入：<data_dir 绝对路径>/output/<run_id>/tailored/
   ```
 
-⚠️ **关键**：file:// 链接**不要用反引号包**——纯文本链接更容易让用户三击全选复制到浏览器。
+- **其他错误**（脚本 stderr 输出 `ERROR: ...`）：
+  ```
+  ⚠️ HTML 生成失败。错误信息：<stderr 内容>
 
-⚠️ **再次强调**：以上完成提示是整条消息的最后一段，**绝对不能省略**。如果只输出了 shortlist 内容就停止，等于让用户看不到 HTML 文件路径——这是必须避免的故障模式。
+  各岗位定制简历已写入：<data_dir 绝对路径>/output/<run_id>/tailored/
+  请检查文件或重新运行。
+  ```
+
+⚠️ **关键约束**：
+- file:// 链接**不要用反引号包**——纯文本链接更容易让用户三击全选复制到浏览器
+- 完成消息必须是整条回复的**最后一段**，不得放在中间
+- **不再生成 shortlist.md**，也**不在聊天里输出 MD 内容概览**——HTML 视图就是给用户看的，重复输出冗余且占屏
 
 ---
 

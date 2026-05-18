@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 任何代码或细节实现之前，**必读** [docs/superpowers/specs/2026-05-02-screenshot-input-design.md](docs/superpowers/specs/2026-05-02-screenshot-input-design.md)。这份 spec 定义了：
 - 4 个 skill 的职责边界（不要跨界）
-- 完整数据流（截图输入 → JD 解析 → shortlist.md）
+- 完整数据流（截图输入 → JD 解析 → shortlist.html）
 - 三处关键 schema：JD frontmatter / analysis frontmatter / shortlist 条目
 - 缓存策略（JD pool / analysis 两层）
 - 改写伦理红线（写进 analyzer/tailor 的 prompt）
@@ -100,7 +100,7 @@ Claude Code 的运行模型：
 - ✅ 设计文档、实现计划已完成
 - ✅ fetcher 改为截图解析，支持全平台，去掉 bb-browser 依赖
 - ✅ 输入流程简化：截图 + 简历文本，无需配置文件
-- ✅ 排序简化为 match score，shortlist 双路输出
+- ✅ 排序简化为 match score；输出**只产 shortlist.html**（不再生成 shortlist.md，避免冗余和聊天屏幕被刷屏）
 - ✅ subcommand 统一为 `fetch`（非 `import`），state.json 对应字段为 `fetched`
 - ✅ analyzer/tailor 路径 bug 修复（`boss-<id>` → `<id>`）
 - ✅ STAR 对齐分析移入 tailor Step 1.0（analyzer 只输出评分，不生成改写建议）
