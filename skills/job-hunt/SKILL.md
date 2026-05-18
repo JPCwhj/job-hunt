@@ -553,6 +553,7 @@ shortlist 内容格式：
 python3 - <<'PY'
 import json
 import datetime
+import webbrowser
 from pathlib import Path
 
 DATA_DIR = "<data_dir>"   # 替换为绝对路径
@@ -580,7 +581,18 @@ out_path = Path(f"{DATA_DIR}/output/{RUN_ID}/shortlist.html")
 out_path.write_text(html)
 
 jobs_path.unlink()
-print(f"OK: {out_path} ({out_path.stat().st_size} bytes)")
+
+# 自动打开默认浏览器（跨平台：webbrowser 模块在 Mac/Win/Linux 都能用）
+file_url = out_path.absolute().as_uri()  # 输出形如 file:///Users/.../shortlist.html
+try:
+    webbrowser.open(file_url)
+    print(f"OK: {out_path} ({out_path.stat().st_size} bytes)")
+    print(f"URL: {file_url}")
+    print("OPENED: browser launched")
+except Exception as e:
+    print(f"OK: {out_path} ({out_path.stat().st_size} bytes)")
+    print(f"URL: {file_url}")
+    print(f"OPEN_FAILED: {e}")
 PY
 ```
 
@@ -590,21 +602,35 @@ PY
 
 **完成提示文案根据 HTML 是否生成成功调整：**
 
-- **HTML 生成成功**（Python 脚本输出 `OK: ...`）：
+- **HTML 生成成功 + 浏览器自动打开**（Python 脚本输出 `OK: ...` 且 `OPENED: ...`）：
+  ```
+  ✅ 全部完成！已自动在浏览器打开 HTML 视图。
+
+  - 📄 shortlist：<data_dir 绝对路径>/output/<run_id>/shortlist.md
+  - 🌐 HTML 视图：file://<data_dir 绝对路径>/output/<run_id>/shortlist.html
+
+  💡 终端里 Cmd+点击（Mac）/ Ctrl+点击（Win/Linux）上面的 file:// 链接可重新在浏览器打开；HTML 页面支持简历编辑和一键导出 PDF。
+  ```
+
+- **HTML 生成成功但浏览器没自动打开**（Python 脚本输出 `OK: ...` 但 `OPEN_FAILED: ...`）：
   ```
   ✅ 全部完成！
 
-  - 📄 shortlist：`<data_dir>/output/<run_id>/shortlist.md`
-  - 🌐 HTML 视图：`<data_dir>/output/<run_id>/shortlist.html`（双击在浏览器打开，可编辑简历并导出 PDF）
+  - 📄 shortlist：<data_dir 绝对路径>/output/<run_id>/shortlist.md
+  - 🌐 HTML 视图：file://<data_dir 绝对路径>/output/<run_id>/shortlist.html
+
+  💡 自动打开浏览器失败，请 Cmd+点击（Mac）/ Ctrl+点击（Win/Linux）上面的 file:// 链接，或复制路径到浏览器地址栏。
   ```
 
 - **HTML 模板缺失**（Python 脚本输出 `SKIP: ...`）：
   ```
   ✅ 全部完成！
 
-  - 📄 shortlist：`<data_dir>/output/<run_id>/shortlist.md`
-  - ⚠️ 未找到 `~/.claude/skills/job-hunt/template.html`，跳过 HTML 输出。运行 `bash scripts/install.sh` 后下次会自动生成。
+  - 📄 shortlist：<data_dir 绝对路径>/output/<run_id>/shortlist.md
+  - ⚠️ 未找到 ~/.claude/skills/job-hunt/template.html，跳过 HTML 输出。运行 `bash scripts/install.sh` 后下次会自动生成。
   ```
+
+⚠️ **关键**：file:// 链接**不要用反引号包**——大部分终端在反引号里的链接不可点击，必须裸 URL 才能 Cmd/Ctrl+点击。
 
 ⚠️ **再次强调**：以上完成提示是整条消息的最后一段，**绝对不能省略**。如果只输出了 shortlist 内容就停止，等于让用户看不到 HTML 文件路径——这是必须避免的故障模式。
 
