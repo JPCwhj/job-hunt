@@ -20,7 +20,7 @@ Screenshot any job listing page, AI parses the JD, runs a deep comparison agains
 2. **JD parsing**: Upload screenshots of job listing pages from any major hiring platform. AI extracts structured data — title, salary, requirements, company size, etc.
 3. **Match analysis**: Aligns each JD with your resume using STAR framework, outputting scores across 4 dimensions: Hard Skills / Experience Depth / Domain Fit / Soft Skills.
 4. **Tailored materials**: Re-focuses your resume for each JD — moves the most relevant experience to the top, sharpens match points, so the HR reading it can immediately see you fit the role. Comes with an opening message + change log.
-5. **Shortlist output**: All positions ranked by match score, highest first.
+5. **Shortlist output**: All positions ranked by match score in a single static HTML file. Open in browser to browse each job's tailored resume / changelog / opener; resume can be edited inline and exported to PDF with one click (Chinese fonts embedded for cross-platform consistency)
 
 ---
 
@@ -30,6 +30,32 @@ Screenshot any job listing page, AI parses the JD, runs a deep comparison agains
 - **No made-up numbers**: Where quantified results are missing, inserts a `[fill in: xxx]` placeholder — never invents user counts, growth rates, or revenue figures
 - **No changes to key facts**: Employment dates, job titles, and company names stay untouched
 - **No hidden edits**: Every change is logged in `changelog.md` — what was changed and why, for your review
+
+---
+
+## 🖼 Preview
+
+After `/job-hunt` finishes, you get a single static HTML file. Opening it in any browser looks like this:
+
+### 📄 Tailored Resume
+
+Left sidebar lists all positions sorted by match score; right pane shows the resume tailored to the current JD.
+**Red/yellow highlights** mark placeholders that need your input — the AI never fabricates data.
+The "📄 Export PDF" button downloads an A4 PDF with embedded Chinese fonts for cross-platform consistency.
+
+![Resume view](htmlImg/long01.png)
+
+### 📋 Changelog
+
+A full transparency report on what the AI changed: reordering / rewording / placeholders to fill in / de-emphasized items, each with the reason for the change. **The yellow-highlighted "needs user input" sections** are AI inferences that require your verification.
+
+![Changelog](htmlImg/long02.png)
+
+### 💬 Opener
+
+A ready-to-send HR opening message tailored to the current position (kept within 200 characters). Click "📋 Copy" to use it directly.
+
+![Opener](htmlImg/long03.png)
 
 ---
 
@@ -48,7 +74,7 @@ Screenshot any job listing page, AI parses the JD, runs a deep comparison agains
 ## Install or Update
 
 ```bash
-npx skills add JPCwhj/job-hunting -g
+npx skills add JPCwhj/job-hunting -g -y
 ```
 
 ---
