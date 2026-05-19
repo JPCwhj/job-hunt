@@ -102,9 +102,11 @@ async function jhParseDetailLayout(job) {
   job.requirements.education  = innerTxt(".info-primary p .text-degree");
 
   // 福利标签：.tag-container-new 直接子 .job-tags（排除 .tag-more 里的重复展开项）
+  // Boss JS 有时会把展开层内容提升到 DOM 外层，用 Set 去重保险
+  const _bSeen = new Set();
   job.benefits = Array.from(
     document.querySelectorAll(".tag-container-new > .job-tags span")
-  ).map(e => e.textContent.trim()).filter(Boolean);
+  ).map(e => e.textContent.trim()).filter(t => t && !_bSeen.has(t) && _bSeen.add(t));
 
   // 岗位描述（.job-sec-text 可能出现多次，拼接后再分段）
   const secTexts = Array.from(document.querySelectorAll(".job-sec-text"));
@@ -114,7 +116,7 @@ async function jhParseDetailLayout(job) {
     .map(t => t.replace(/^职位描述\s*/i, "").trim())
     .join("\n\n");
   if (fullDesc) {
-    const splitRe = /(任职要求|岗位要求|任职资格|要求[:：])/;
+    const splitRe = /(职位要求|任职要求|岗位要求|任职资格|要求[:：])/;
     const m = fullDesc.split(splitRe);
     if (m.length >= 3) {
       job.job_description = m[0].trim();
@@ -202,7 +204,7 @@ async function jhParseSplitPaneLayout(job) {
   if (descEl) {
     const raw = (descEl.innerText || "").trim();
     if (raw.length > 20) {
-      const splitRe = /(任职要求|岗位要求|任职资格|要求[:：])/;
+      const splitRe = /(职位要求|任职要求|岗位要求|任职资格|要求[:：])/;
       const m = raw.split(splitRe);
       if (m.length >= 3) {
         job.job_description = m[0].trim();
@@ -222,14 +224,25 @@ async function jhParseSplitPaneLayout(job) {
   }
 
   // HR 姓名：h2.name 含「姓名 活跃状态」，去掉后半段
+  // .boss-active-time 可能不存在，用正则兜底去掉「在线/刚刚/N分钟前」等活跃文字
   const hrActiveText = txt(".boss-active-time", root);
   const hrNameEl = root.querySelector(".job-boss-info h2.name");
   if (hrNameEl) {
     let name = (hrNameEl.innerText || hrNameEl.textContent).trim();
-    if (hrActiveText) name = name.replace(hrActiveText, "").trim();
+    if (hrActiveText) {
+      name = name.replace(hrActiveText, "").trim();
+    } else {
+      // 兜底：按换行切割，只取第一段（姓名行）
+      name = name.split("\n")[0].trim();
+    }
     job.hr.name = name || null;
+    if (!hrActiveText) {
+      // 从 name 元素的第二行提取活跃状态
+      const lines = (hrNameEl.innerText || hrNameEl.textContent).trim().split("\n");
+      if (lines.length > 1) job.hr.active_status = lines[1].trim() || null;
+    }
   }
-  job.hr.active_status = hrActiveText;
+  if (!job.hr.active_status) job.hr.active_status = hrActiveText || null;
 }
 
 // ── kanzhun 字体 PUA 字符解码（薪资反爬绕过）────────────────────────────────
