@@ -113,7 +113,7 @@ npx skills add JPCwhj/job-hunt -g -y --all
 
 ---
 
-## 使用方式
+## skill 使用方式
 
 **方式一**：启动任意支持 skill 的 agent 工具，运行对应命令：
 - Claude Code：`/job-hunt`

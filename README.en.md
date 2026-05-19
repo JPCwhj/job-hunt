@@ -113,7 +113,7 @@ If you'd rather skip screenshots, install the browser extension to bookmark jobs
 
 ---
 
-## Usage
+## Skill Usage
 
 **Option 1**: Launch any skill-compatible agent tool and run the corresponding command:
 - Claude Code: `/job-hunt`
