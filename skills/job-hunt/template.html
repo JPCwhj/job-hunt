@@ -141,6 +141,11 @@
     .tab-content blockquote { border-left: 3px solid #d1d5db; padding-left: 12px; color: #6b7280; margin: 8px 0; }
     .tab-content[contenteditable="true"]:focus { outline: 2px solid #93c5fd; outline-offset: 4px; }
 
+    /* 原帖链接 */
+    .job-link { margin-top: 6px; }
+    .job-link a { color: #2563eb; font-size: 13px; text-decoration: none; }
+    .job-link a:hover { text-decoration: underline; }
+
     /* changelog 中"需用户回填"高亮 */
     .changelog-fill { background: #fef3c7; padding: 12px; border-radius: 6px; border-left: 3px solid #f59e0b; }
 
@@ -346,6 +351,7 @@
             <span class="score-chip">软性 ${scores.soft_fit ?? '-'}</span>
           </div>
           ${job.one_liner ? `<div class="one-liner">💡 ${escapeHtml(job.one_liner)}</div>` : ''}
+          ${job.url ? `<div class="job-link"><a href="${escapeHtml(job.url)}" target="_blank" rel="noopener">🔗 查看原帖</a></div>` : ''}
         </div>
 
         <div class="tabs">

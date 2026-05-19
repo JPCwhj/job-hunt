@@ -59,6 +59,9 @@ id: {yaml_value(id_)}
 fetched_at: {yaml_value(now)}
 run_id: {yaml_value(run_id)}
 source: {yaml_value("extension")}
+platform: {yaml_value(job.get("platform"))}
+external_id: {yaml_value(job.get("external_id"))}
+url: {yaml_value(job.get("url"))}
 
 title: {yaml_value(title)}
 company:
@@ -134,10 +137,31 @@ def main():
         runs = sorted([p.name for p in output_dir.iterdir() if p.is_dir()], reverse=True)
         if runs: run_id = runs[0]
 
+    # 读取已有文件的 external_id，用于去重
+    existing_external_ids = set()
+    for md_file in jd_pool.glob("*.md"):
+        if md_file.name.endswith(".analysis.md"):
+            continue
+        try:
+            text = md_file.read_text(encoding="utf-8")
+            for line in text.splitlines():
+                if line.startswith("external_id:"):
+                    val = line.split(":", 1)[1].strip().strip('"')
+                    if val and val != "null":
+                        existing_external_ids.add(val)
+                    break
+        except Exception:
+            pass
+
     written = 0
+    skipped = 0
     errors = []
     for job in jobs:
         try:
+            ext_id = job.get("external_id")
+            if ext_id and ext_id in existing_external_ids:
+                skipped += 1
+                continue
             md, fname = build_md(job, run_id)
             target = jd_pool / fname
             i = 1
@@ -146,6 +170,8 @@ def main():
                 target = jd_pool / f"{stem}-{i}.md"
                 i += 1
             target.write_text(md, encoding="utf-8")
+            if ext_id:
+                existing_external_ids.add(ext_id)
             written += 1
         except Exception as e:
             errors.append(str(e))
@@ -154,9 +180,11 @@ def main():
         print(f"ERROR: 全部写入失败：{errors[0]}")
         sys.exit(2)
     elif errors:
-        print(f"OK: 已导入 {written} 个岗位（{len(errors)} 个失败：{errors[0]}）-> {jd_pool}")
+        skip_msg = f"，{skipped} 个已存在跳过" if skipped else ""
+        print(f"OK: 已导入 {written} 个岗位（{len(errors)} 个失败：{errors[0]}{skip_msg}）-> {jd_pool}")
     else:
-        print(f"OK: 已导入 {written} 个岗位 -> {jd_pool}")
+        skip_msg = f"，{skipped} 个已存在跳过" if skipped else ""
+        print(f"OK: 已导入 {written} 个岗位{skip_msg} -> {jd_pool}")
 
 
 if __name__ == "__main__":

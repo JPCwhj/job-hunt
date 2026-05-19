@@ -164,6 +164,7 @@ def main():
             "monthly_count": salary.get("monthly_count"),
             "city": location.get("city", ""),
             "district": location.get("district", "") or "",
+            "url": jd_fm.get("url") or "",
             "scores": {
                 "hard_skills": scores.get("hard_skills", 0),
                 "experience_depth": scores.get("experience_depth", 0),
