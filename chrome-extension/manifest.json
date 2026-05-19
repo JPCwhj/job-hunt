@@ -26,7 +26,7 @@
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://jobs.51job.com/*"],
+      "matches": ["https://jobs.51job.com/*/*.html*"],
       "js": ["src/lib/schema.js", "src/lib/storage.js", "src/content/51job.js"],
       "css": ["src/content/51job.css"],
       "run_at": "document_idle"
