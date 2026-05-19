@@ -85,7 +85,7 @@ A ready-to-send HR opening message tailored to the current position (kept within
 
 ---
 
-## Install or Update
+## Install or Update Skill
 
 ```bash
 npx skills add JPCwhj/job-hunt -g -y --all
@@ -93,7 +93,7 @@ npx skills add JPCwhj/job-hunt -g -y --all
 
 ---
 
-## Browser Extension (Optional)
+## Install Browser Extension (Optional)
 
 If you'd rather skip screenshots, install the browser extension to bookmark jobs and batch-export them. **Currently supports four major hiring platforms.**
 
@@ -133,7 +133,7 @@ If you'd rather skip screenshots, install the browser extension to bookmark jobs
 4. After confirming screenshots, analysis and tailoring run automatically — no extra trigger needed
 5. Review shortlist, fill in placeholders, apply manually
 
-**Re-run with a new resume**: Run `/job-hunt` again and it will prompt you to send your updated resume. Send it directly to replace the cached version — no need to clean first.
+**Re-run with a new resume**: Run `/job-hunt` again and it will prompt you to send your updated resume. Send it directly to replace the cached version — no need to clean first. A new resume automatically triggers the quality assessment with section-by-section feedback.
 
 ### Subcommands
 
@@ -192,7 +192,7 @@ If you'd rather skip screenshots, install the browser extension to bookmark jobs
 
 - **Works with all major hiring platforms**: any screenshot containing company name, job title, and JD is sufficient
 - **No auto-apply**: eliminates account ban risk
-- **No plugins or extensions required**: you screenshot, AI parses — no browser extensions or MCP tools needed
+- **Zero dependencies in screenshot mode**: you screenshot, AI parses — no browser extensions or MCP tools needed; the Chrome extension is an optional enhancement, not a requirement
 
 ---
 
