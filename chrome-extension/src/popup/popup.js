@@ -116,7 +116,7 @@ function onExportClick() {
 
   chrome.runtime.sendMessage(
     { type: "jh-export", filename, jsonText },
-    (resp) => {
+    async (resp) => {
       const lastErr = chrome.runtime.lastError;
       const btn = document.getElementById("jh-export");
       if (resp && resp.ok) {
