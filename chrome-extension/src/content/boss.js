@@ -165,19 +165,21 @@ async function jhDecodeSalary(rawText) {
   try {
     await document.fonts.ready; // 确保 kanzhun-mix 已加载
 
-    const W = 28, H = 32;
+    const W = 32, H = 40;
     const canvas = document.createElement("canvas");
     canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext("2d");
     ctx.textBaseline = "alphabetic";
 
-    // 用 Arial 构建 0-9 参考像素指纹（Alpha 通道）
-    ctx.font = `18px Arial, sans-serif`;
+    // 用 kanzhun-mix 构建 0-9 参考像素指纹（同字体比对，消除跨字体字形差异）
+    // 若 kanzhun-mix 无标准数字字形则自动 fallback 到 Arial
+    const refFont = `20px "kanzhun-mix", Arial, sans-serif`;
+    ctx.font = refFont;
     const refs = {};
     for (let d = 0; d <= 9; d++) {
       ctx.clearRect(0, 0, W, H);
       ctx.fillStyle = "#000";
-      ctx.fillText(String(d), 4, 22);
+      ctx.fillText(String(d), 4, 24);
       refs[d] = new Uint8ClampedArray(ctx.getImageData(0, 0, W, H).data);
     }
 
@@ -188,10 +190,10 @@ async function jhDecodeSalary(rawText) {
       if (code < 0xE000 || code > 0xF8FF) { result += ch; continue; }
       if (_jhDigitCache[code] !== undefined) { result += _jhDigitCache[code]; continue; }
 
-      ctx.font = `18px "kanzhun-mix"`;
+      ctx.font = `20px "kanzhun-mix"`;
       ctx.clearRect(0, 0, W, H);
       ctx.fillStyle = "#000";
-      ctx.fillText(ch, 4, 22);
+      ctx.fillText(ch, 4, 24);
       const puaAlpha = ctx.getImageData(0, 0, W, H).data;
 
       let best = "?", bestScore = Infinity;
