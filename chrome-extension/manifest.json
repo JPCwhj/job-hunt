@@ -23,25 +23,25 @@
   "content_scripts": [
     {
       "matches": ["https://www.zhipin.com/job_detail/*", "https://www.zhipin.com/web/geek/jobs*"],
-      "js": ["src/lib/schema.js", "src/lib/storage.js", "src/content/boss.js"],
+      "js": ["src/lib/schema.js", "src/lib/storage.js", "src/lib/drag.js", "src/content/boss.js"],
       "css": ["src/content/boss.css"],
       "run_at": "document_idle"
     },
     {
       "matches": ["https://jobs.51job.com/*/*.html*"],
-      "js": ["src/lib/schema.js", "src/lib/storage.js", "src/content/51job.js"],
+      "js": ["src/lib/schema.js", "src/lib/storage.js", "src/lib/drag.js", "src/content/51job.js"],
       "css": ["src/content/51job.css"],
       "run_at": "document_idle"
     },
     {
       "matches": ["https://www.zhaopin.com/jobdetail/*"],
-      "js": ["src/lib/schema.js", "src/lib/storage.js", "src/content/zhaopin.js"],
+      "js": ["src/lib/schema.js", "src/lib/storage.js", "src/lib/drag.js", "src/content/zhaopin.js"],
       "css": ["src/content/zhaopin.css"],
       "run_at": "document_idle"
     },
     {
       "matches": ["https://www.liepin.com/job/*.shtml*"],
-      "js": ["src/lib/schema.js", "src/lib/storage.js", "src/content/liepin.js"],
+      "js": ["src/lib/schema.js", "src/lib/storage.js", "src/lib/drag.js", "src/content/liepin.js"],
       "css": ["src/content/liepin.css"],
       "run_at": "document_idle"
     }
