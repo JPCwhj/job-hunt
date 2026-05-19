@@ -156,6 +156,12 @@ async function init() {
   document.getElementById("jh-export").addEventListener("click", onExportClick);
   document.getElementById("jh-select-all").addEventListener("click", onSelectAllClick);
   document.getElementById("jh-clear").addEventListener("click", onClearClick);
+
+  // storage 变化时自动刷新列表（解决 popup 已打开时点 FAB 不更新的问题）
+  jhOnStorageChange(async () => {
+    state.jobs = await jhLoadJobs();
+    render();
+  });
 }
 
 init();
