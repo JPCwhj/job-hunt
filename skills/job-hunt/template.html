@@ -24,11 +24,11 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
       height: 100%;
-      font-family: 'SourceHanSansCN', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      font-family: 'SourceHanSansCN', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
       font-size: 14px;
       line-height: 1.6;
-      color: #1a1a1a;
-      background: #fafafa;
+      color: #0f172a;
+      background: #f1f5f9;
     }
     button { font-family: inherit; cursor: pointer; }
     a { color: #2563eb; text-decoration: none; }
@@ -36,8 +36,8 @@
     /* === 布局：桌面端 左列表 + 右详情 === */
     .app {
       display: grid;
-      grid-template-columns: 320px 1fr;
-      grid-template-rows: 56px 1fr;
+      grid-template-columns: 300px 1fr;
+      grid-template-rows: 52px 1fr;
       grid-template-areas: "topbar topbar" "sidebar main";
       height: 100vh;
     }
@@ -46,89 +46,168 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 20px;
-      background: #fff;
-      border-bottom: 1px solid #e5e7eb;
-      font-weight: 600;
+      padding: 0 24px;
+      background: #0f172a;
+      border-bottom: 1px solid #1e293b;
     }
-    .topbar .meta { font-weight: 400; color: #6b7280; font-size: 13px; }
+    .topbar .brand { color: #fff; font-weight: 700; font-size: 15px; letter-spacing: -0.3px; }
+    .topbar .brand span { color: #38bdf8; }
+    .topbar .meta { color: #64748b; font-size: 13px; }
     .sidebar {
       grid-area: sidebar;
       overflow-y: auto;
-      background: #fff;
-      border-right: 1px solid #e5e7eb;
+      background: #1e293b;
+      border-right: 1px solid #0f172a;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-header {
+      padding: 14px 20px 10px;
+      border-bottom: 1px solid #334155;
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      flex-shrink: 0;
     }
     .main {
       grid-area: main;
       overflow-y: auto;
-      padding: 24px 32px;
+      padding: 28px 36px;
     }
 
     /* === 列表条目 === */
     .job-item {
-      padding: 14px 18px;
-      border-bottom: 1px solid #f3f4f6;
+      padding: 14px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
       cursor: pointer;
-      transition: background 0.15s;
+      transition: background 0.1s;
     }
-    .job-item:hover { background: #f9fafb; }
-    .job-item.active { background: #eff6ff; border-left: 3px solid #2563eb; padding-left: 15px; }
-    .job-item .rank { font-size: 12px; color: #9ca3af; }
-    .job-item .company { font-weight: 600; margin-top: 2px; }
-    .job-item .title { color: #4b5563; font-size: 13px; margin-top: 2px; }
-    .job-item .score { font-size: 12px; color: #059669; font-weight: 600; margin-top: 4px; }
+    .job-item:hover { background: #273549; }
+    .job-item.active { background: #172554; border-left: 3px solid #3b82f6; padding-left: 17px; }
+    .job-item .rank { font-size: 12px; color: #94a3b8; margin-bottom: 5px; }
+    .job-item .company {
+      font-weight: 600; font-size: 15px; color: #fff; margin-top: 0;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .job-item .title {
+      color: #cbd5e1; font-size: 13px; margin-top: 3px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .job-item .jmeta {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 10px; gap: 8px;
+    }
+    .job-item .jsalary {
+      font-size: 13px; color: #cbd5e1;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+    }
+    .job-item .jsalary.missing { color: #475569; font-style: italic; }
+    .job-item .jscore {
+      display: flex; align-items: baseline; gap: 3px; flex-shrink: 0;
+      background: #064e3b; color: #34d399; padding: 3px 9px; border-radius: 20px;
+    }
+    .job-item .jscore .score-label { font-size: 10px; font-weight: 500; opacity: 0.85; }
+    .job-item .jscore .score-num { font-size: 12px; font-weight: 700; }
+    .job-item.active .jscore { background: #1e3a5f; color: #60a5fa; }
+
+    /* 侧边栏空状态 */
+    .sidebar-empty {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 32px 24px; text-align: center; gap: 10px;
+    }
+    .sidebar-empty .empty-icon { font-size: 32px; opacity: 0.4; }
+    .sidebar-empty .empty-title { color: #94a3b8; font-size: 14px; font-weight: 600; }
+    .sidebar-empty .empty-sub { color: #475569; font-size: 12px; line-height: 1.6; }
 
     /* === 详情头部 === */
-    .detail-header { margin-bottom: 20px; }
-    .detail-header h1 { font-size: 22px; font-weight: 600; }
+    .detail-header { margin-bottom: 22px; }
+    .detail-header-top {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 20px;
+    }
+    .detail-header-left { flex: 1; min-width: 0; }
+    .detail-header h1 { font-size: 24px; font-weight: 700; color: #0f172a; letter-spacing: -0.5px; }
     .detail-header .info {
-      color: #6b7280;
-      margin-top: 6px;
-      font-size: 13px;
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
+      color: #64748b; margin-top: 8px; font-size: 13px;
+      display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
     }
-    .detail-header .scores {
-      margin-top: 10px;
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
+
+    /* 大匹配度卡片 */
+    .score-hero {
+      flex-shrink: 0; background: #eff6ff; border: 1px solid #bfdbfe;
+      border-radius: 12px; padding: 16px 22px; text-align: center; min-width: 108px;
     }
-    .score-chip {
-      background: #f3f4f6;
-      padding: 4px 10px;
-      border-radius: 12px;
-      font-size: 12px;
-      color: #374151;
+    .score-hero .score-main {
+      font-size: 46px; font-weight: 700; line-height: 1;
+      color: #1d4ed8; letter-spacing: -2px;
     }
-    .one-liner { margin-top: 10px; color: #4b5563; font-style: italic; }
+    .score-hero .score-tag {
+      font-size: 11px; font-weight: 600; color: #3b82f6;
+      margin-top: 5px; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+
+    /* 分项小分 */
+    .score-breakdown { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
+    .score-item {
+      background: #f8fafc; border-radius: 8px; padding: 8px 10px;
+      text-align: center; border: 1px solid #e2e8f0;
+    }
+    .score-item .sval { font-size: 16px; font-weight: 700; color: #3b82f6; }
+    .score-item .sval.missing { color: #cbd5e1; font-weight: 400; }
+    .score-item .slabel { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+
+    .one-liner {
+      margin-top: 14px; padding: 11px 16px;
+      background: #f8fafc; border-left: 3px solid #3b82f6; border-radius: 0 6px 6px 0;
+      font-size: 13px; color: #475569; font-style: italic;
+    }
 
     /* === Tabs === */
     .tabs {
       display: flex;
-      gap: 4px;
-      margin-bottom: 16px;
-      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e2e8f0;
     }
     .tab {
-      padding: 10px 18px;
+      padding: 10px 20px;
       border: none;
       background: transparent;
-      color: #6b7280;
+      color: #94a3b8;
       font-weight: 500;
+      font-size: 14px;
       border-bottom: 2px solid transparent;
-      margin-bottom: -1px;
+      margin-bottom: -2px;
+      transition: all 0.15s;
     }
-    .tab.active { color: #2563eb; border-bottom-color: #2563eb; }
+    .tab:hover { color: #475569; }
+    .tab.active { color: #1d4ed8; border-bottom-color: #3b82f6; }
 
     /* === Tab 内容 === */
     .tab-content {
       background: #fff;
-      border-radius: 8px;
-      padding: 28px 32px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-      min-height: 400px;
+      border-radius: 12px;
+      padding: 32px 36px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      min-height: 200px;
+    }
+
+    /* Tab 空状态 */
+    .tab-empty {
+      padding: 48px 36px; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+    .tab-empty .empty-icon { font-size: 28px; opacity: 0.3; }
+    .tab-empty .empty-text { color: #94a3b8; font-size: 14px; }
+
+    /* 简历内容过短警告 */
+    .resume-thin-tip {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px;
+      padding: 10px 14px; margin-bottom: 12px; font-size: 13px; color: #92400e;
     }
     .tab-content h1, .tab-content h2, .tab-content h3 { margin: 16px 0 8px; font-weight: 600; }
     .tab-content h1 { font-size: 20px; }
@@ -160,17 +239,21 @@
       align-items: center;
       gap: 12px;
       flex-wrap: wrap;
+      padding-top: 14px;
+      border-top: 1px solid #f1f5f9;
     }
-    .action-bar .save-status { color: #059669; font-size: 13px; }
+    .action-bar .save-status { color: #059669; font-size: 13px; font-weight: 500; }
+    .action-bar .save-status.editing { color: #94a3b8; }
     .btn {
-      padding: 8px 16px;
-      border: 1px solid #d1d5db;
+      padding: 9px 20px;
+      border: 1px solid #e2e8f0;
       background: #fff;
-      border-radius: 6px;
+      border-radius: 8px;
       font-size: 13px;
+      font-weight: 600;
       transition: all 0.15s;
     }
-    .btn:hover { background: #f9fafb; border-color: #9ca3af; }
+    .btn:hover { background: #f8fafc; border-color: #cbd5e1; }
     .btn-primary { background: #2563eb; color: #fff; border-color: #2563eb; }
     .btn-primary:hover { background: #1d4ed8; border-color: #1d4ed8; }
 
@@ -183,12 +266,12 @@
       }
       .sidebar {
         position: fixed;
-        top: 56px;
+        top: 52px;
         left: 0;
         right: 0;
         bottom: 0;
         z-index: 10;
-        background: #fff;
+        background: #1e293b;
         display: none;
       }
       .app[data-view="list"] .sidebar { display: block; }
@@ -260,8 +343,40 @@
     document.getElementById('topbar-meta').textContent = `共 ${JOBS.length} 个岗位`;
 
     if (JOBS.length === 0) {
-      document.getElementById('main').textContent = '没有岗位数据。';
+      renderEmptyState();
       return;
+    }
+
+    function renderEmptyState() {
+      const sb = document.getElementById('sidebar');
+      sb.textContent = '';
+      const wrap = document.createElement('div');
+      wrap.className = 'sidebar-empty';
+      const icon = document.createElement('div');
+      icon.className = 'empty-icon';
+      icon.textContent = '📭';
+      const title = document.createElement('div');
+      title.className = 'empty-title';
+      title.textContent = '暂无岗位';
+      const sub = document.createElement('div');
+      sub.className = 'empty-sub';
+      sub.textContent = '上传岗位截图或 .jobs.json 文件后，定制结果会显示在这里';
+      wrap.appendChild(icon); wrap.appendChild(title); wrap.appendChild(sub);
+      sb.appendChild(wrap);
+
+      const main = document.getElementById('main');
+      main.textContent = '';
+      main.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center';
+      const mIcon = document.createElement('div');
+      mIcon.style.cssText = 'font-size:48px;opacity:.25';
+      mIcon.textContent = '🗂';
+      const mTitle = document.createElement('div');
+      mTitle.style.cssText = 'color:#94a3b8;font-size:18px;font-weight:600';
+      mTitle.textContent = '还没有分析结果';
+      const mSub = document.createElement('div');
+      mSub.style.cssText = 'color:#64748b;font-size:14px';
+      mSub.textContent = '上传岗位截图后，job-hunt 会自动完成解析、匹配和简历定制';
+      main.appendChild(mIcon); main.appendChild(mTitle); main.appendChild(mSub);
     }
 
     // === 状态 ===
@@ -299,64 +414,127 @@
     function escapeAttr(s) {
       return String(s).replace(/"/g, '&quot;');
     }
+    function safeScore(val) {
+      if (val === null || val === undefined) return '—';
+      const n = Number(val);
+      if (isNaN(n) || n <= 0) return '—';
+      return String(Math.min(100, Math.round(n)));
+    }
 
     // === 渲染左侧列表 ===
     function renderSidebar() {
       const medals = ['🥇', '🥈', '🥉'];
       const sidebar = document.getElementById('sidebar');
-      const fragments = JOBS.map(job => {
-        const medal = medals[job.rank - 1] || `${job.rank}.`;
-        const active = job.id === currentJobId ? ' active' : '';
-        return `
-          <div class="job-item${active}" data-job-id="${escapeAttr(job.id)}">
-            <div class="rank">${medal} 第 ${job.rank} 名</div>
-            <div class="company">${escapeHtml(job.company || '未知公司')}</div>
-            <div class="title">${escapeHtml(job.title || '')}</div>
-            <div class="score">匹配度 ${job.match_score ?? '-'} 分</div>
-          </div>
-        `;
-      });
-      sidebar.innerHTML = fragments.join('');
-      sidebar.querySelectorAll('.job-item').forEach(el => {
-        el.addEventListener('click', () => {
-          currentJobId = el.dataset.jobId;
+
+      // 已渲染过：只切 active class，不重建 DOM
+      const existing = sidebar.querySelectorAll('.job-item');
+      if (existing.length === JOBS.length) {
+        existing.forEach(el => {
+          el.classList.toggle('active', el.dataset.jobId === String(currentJobId));
+        });
+        return;
+      }
+
+      // 首次渲染：建 header + 列表项
+      sidebar.textContent = '';
+      const header = document.createElement('div');
+      header.className = 'sidebar-header';
+      header.textContent = '按匹配度排序';
+      sidebar.appendChild(header);
+
+      JOBS.forEach(job => {
+        const rank = parseInt(job.rank, 10) || 1;
+        const medal = medals[rank - 1] || '';
+        const scoreNum = safeScore(job.match_score);
+        const salaryText = job.salary_range
+          ? `💰 ${job.salary_range}${job.monthly_count ? ' · ' + job.monthly_count + '薪' : ''}`
+          : '薪资面议';
+        const locationText = [job.city, job.district].filter(Boolean).join(' · ');
+        const titleLine = [job.title, locationText].filter(Boolean).join(' · ');
+        const active = String(job.id) === String(currentJobId) ? ' active' : '';
+
+        const item = document.createElement('div');
+        item.className = `job-item${active}`;
+        item.dataset.jobId = job.id;
+        item.innerHTML = `
+          <div class="rank">${medal} 第 ${rank} 名</div>
+          <div class="company">${escapeHtml(job.company || '未知公司')}</div>
+          <div class="title">${escapeHtml(titleLine || job.title || '')}</div>
+          <div class="jmeta">
+            <span class="jsalary${job.salary_range ? '' : ' missing'}">${escapeHtml(salaryText)}</span>
+            <span class="jscore">
+              <span class="score-label">匹配度</span>
+              <span class="score-num">${scoreNum}</span>
+            </span>
+          </div>`;
+
+        item.addEventListener('click', () => {
+          currentJobId = item.dataset.jobId;
           document.querySelector('.app').dataset.view = 'detail';
-          renderSidebar();
+          renderSidebar();   // 只切 active class（走上面的 existing 分支）
           renderMain();
         });
+        sidebar.appendChild(item);
       });
     }
 
     // === 渲染右侧详情 ===
     function renderMain() {
-      const job = JOBS.find(j => j.id === currentJobId);
+      const job = JOBS.find(j => String(j.id) === String(currentJobId));
       if (!job) return;
-      const salary = job.salary_range || '薪资面议';
-      const months = job.monthly_count ? `·${job.monthly_count}薪` : '';
-      const district = job.district ? `·${job.district}` : '';
       const scores = job.scores || {};
+
+      // 地点 & 薪资（null 处理）
+      const locationParts = [job.city, job.district].filter(Boolean).join(' · ');
+      const locationHtml = locationParts ? `<span>📍 ${escapeHtml(locationParts)}</span>` : '';
+      const salaryHtml = job.salary_range
+        ? `<span>💰 ${escapeHtml(job.salary_range + (job.monthly_count ? ' · ' + job.monthly_count + '薪' : ''))}</span>`
+        : `<span style="color:#94a3b8;font-style:italic">薪资面议</span>`;
+
+      // 分项分数
+      const subScores = [
+        { key: 'hard_skills',       label: '硬技能' },
+        { key: 'experience_depth',  label: '经验深度' },
+        { key: 'domain_fit',        label: '行业契合' },
+        { key: 'soft_fit',          label: '软性匹配' },
+      ];
+      const scoreItemsHtml = subScores.map(s => {
+        const v = safeScore(scores[s.key]);
+        return `<div class="score-item">
+          <div class="sval${v === '—' ? ' missing' : ''}">${v}</div>
+          <div class="slabel">${s.label}</div>
+        </div>`;
+      }).join('');
+
+      const oneLinerHtml = job.one_liner
+        ? `<div class="one-liner">${escapeHtml(job.one_liner)}</div>` : '';
+      const jobLinkHtml = job.url
+        ? `<div class="job-link"><a href="${escapeHtml(job.url)}" target="_blank" rel="noopener">🔗 查看原帖</a></div>` : '';
 
       document.getElementById('main').innerHTML = `
         <div class="detail-header">
-          <h1>${escapeHtml(job.company || '')} · ${escapeHtml(job.title || '')}</h1>
-          <div class="info">
-            <span>💰 ${escapeHtml(salary + months)}</span>
-            <span>📍 ${escapeHtml((job.city || '') + district)}</span>
-            <span>🎯 匹配度 ${job.match_score ?? '-'} 分</span>
+          <div class="detail-header-top">
+            <div class="detail-header-left">
+              <h1>${escapeHtml(job.title || '未知职位')}</h1>
+              <div class="info">
+                <span>${escapeHtml(job.company || '')}</span>
+                ${locationHtml}
+                ${salaryHtml}
+              </div>
+            </div>
+            <div class="score-hero">
+              <div class="score-main">${safeScore(job.match_score)}</div>
+              <div class="score-tag">匹配度</div>
+            </div>
           </div>
-          <div class="scores">
-            <span class="score-chip">硬技能 ${scores.hard_skills ?? '-'}</span>
-            <span class="score-chip">经验 ${scores.experience_depth ?? '-'}</span>
-            <span class="score-chip">行业 ${scores.domain_fit ?? '-'}</span>
-            <span class="score-chip">软性 ${scores.soft_fit ?? '-'}</span>
-          </div>
-          ${job.one_liner ? `<div class="one-liner">💡 ${escapeHtml(job.one_liner)}</div>` : ''}
-          ${job.url ? `<div class="job-link"><a href="${escapeHtml(job.url)}" target="_blank" rel="noopener">🔗 查看原帖</a></div>` : ''}
+          <div class="score-breakdown">${scoreItemsHtml}</div>
+          ${oneLinerHtml}
+          ${jobLinkHtml}
         </div>
 
         <div class="tabs">
-          <button class="tab${currentTab==='resume'?' active':''}" data-tab="resume">📄 简历</button>
-          <button class="tab${currentTab==='changelog'?' active':''}" data-tab="changelog">📋 改动</button>
+          <button class="tab${currentTab==='resume'?' active':''}" data-tab="resume">📄 定制简历</button>
+          <button class="tab${currentTab==='changelog'?' active':''}" data-tab="changelog">📋 改动说明</button>
           <button class="tab${currentTab==='opener'?' active':''}" data-tab="opener">💬 开场白</button>
         </div>
 
@@ -375,14 +553,24 @@
     }
 
     function renderTabContent(job) {
-      // Strip stale event listeners by cloning the element
+      // 克隆节点以清除旧事件监听
       const oldEl = document.getElementById('tab-content');
       const el = oldEl.cloneNode(false);
       oldEl.replaceWith(el);
       const actions = document.getElementById('action-bar');
 
       if (currentTab === 'resume') {
-        el.innerHTML = loadResumeHtml(job);
+        // 简历内容极短提示
+        const resumeHtml = loadResumeHtml(job);
+        const wordCount = resumeHtml.replace(/<[^>]+>/g, '').trim().length;
+        if (wordCount < 80 && wordCount > 0) {
+          const tip = document.createElement('div');
+          tip.className = 'resume-thin-tip';
+          tip.textContent = '⚠️ 当前简历内容较少，AI 可定制的空间有限。建议补充更多工作经历和项目经验后重新上传。';
+          el.parentNode.insertBefore(tip, el);
+        }
+
+        el.innerHTML = resumeHtml;
         el.setAttribute('contenteditable', 'true');
         el.addEventListener('paste', e => {
           e.preventDefault();
@@ -399,10 +587,10 @@
         let saveTimer = null;
         el.addEventListener('input', () => {
           if (saveTimer) clearTimeout(saveTimer);
-          showSaveStatus('编辑中...');
+          showSaveStatus('编辑中...', true);
           saveTimer = setTimeout(() => {
             saveResumeHtml(job.id, el.innerHTML);
-            showSaveStatus('💾 已自动保存');
+            showSaveStatus('💾 已自动保存', false);
           }, 500);
         });
 
@@ -411,23 +599,38 @@
           <button class="btn" id="btn-restore">🔄 还原初始版本</button>
           <button class="btn btn-primary" id="btn-pdf">📄 导出 PDF</button>
         `;
+        // 直接还原，不弹浏览器 confirm
         document.getElementById('btn-restore').addEventListener('click', () => {
-          if (!confirm('确认还原为初始版本？当前编辑会丢失。')) return;
           clearResumeHtml(job.id);
           renderTabContent(job);
         });
         document.getElementById('btn-pdf').addEventListener('click', () => exportPdf(job, el));
+
       } else if (currentTab === 'opener') {
         el.removeAttribute('contenteditable');
-        el.innerHTML = marked.parse(job.opener_md || '*无开场白*');
-        actions.innerHTML = `<button class="btn" id="btn-copy">📋 复制开场白</button>`;
+        if (!job.opener_md) {
+          el.innerHTML = '<div class="tab-empty"><div class="empty-icon">💬</div><div class="empty-text">开场白尚未生成</div></div>';
+          actions.innerHTML = '';
+          return;
+        }
+        el.innerHTML = marked.parse(job.opener_md);
+        actions.innerHTML = `<button class="btn btn-primary" id="btn-copy">📋 复制开场白</button>`;
         document.getElementById('btn-copy').addEventListener('click', () => {
-          navigator.clipboard.writeText(job.opener_md || '').then(() => alert('已复制到剪贴板'));
+          navigator.clipboard.writeText(job.opener_md || '').then(() => {
+            const btn = document.getElementById('btn-copy');
+            if (btn) { btn.textContent = '✅ 已复制'; setTimeout(() => { btn.textContent = '📋 复制开场白'; }, 2000); }
+          });
         });
+
       } else if (currentTab === 'changelog') {
         el.removeAttribute('contenteditable');
-        let cl = marked.parse(job.changelog_md || '*无改动说明*');
-        // "需用户回填" 节高亮：把含该文字的标题之后到下一个标题之前的内容包一层
+        if (!job.changelog_md) {
+          el.innerHTML = '<div class="tab-empty"><div class="empty-icon">📋</div><div class="empty-text">改动说明尚未生成</div></div>';
+          actions.innerHTML = '';
+          return;
+        }
+        let cl = marked.parse(job.changelog_md);
+        // "需用户回填" 节高亮
         cl = cl.replace(
           /(<h[1-6][^>]*>[^<]*需用户回填[^<]*<\/h[1-6]>)([\s\S]*?)(?=<h[1-6]|$)/g,
           '$1<div class="changelog-fill">$2</div>'
@@ -437,9 +640,11 @@
       }
     }
 
-    function showSaveStatus(text) {
+    function showSaveStatus(text, isEditing) {
       const s = document.getElementById('save-status');
-      if (s) s.textContent = text;
+      if (!s) return;
+      s.textContent = text;
+      s.classList.toggle('editing', !!isEditing);
     }
 
     // === PDF 导出 ===
