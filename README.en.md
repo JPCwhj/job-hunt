@@ -8,7 +8,7 @@ Author: [Douyin](https://www.douyin.com/user/MS4wLjABAAAAWo2xyaSERZ6A7j3Ln09ZOlL
 
 HR spends less than 10 seconds scanning a resume — **and how well your resume matches the JD is what actually determines whether you pass the first cut.**
 
-**Send 5, 10, or 20 job postings at once — batch-process them all. AI runs the full pipeline (parse → match → tailor → opener) on every JD in parallel, then ranks them by match score in a single HTML, so you instantly see which roles to prioritize.**
+**job-hunt is an AI skill that lives inside your agent** (Claude Code, Codex, OpenClaw, etc.): send it your resume and a batch of jobs, and it runs «parse → match → tailor resume → write opener» on each JD automatically, then produces a single HTML report ranked by match score. Whether it's 5, 10, or 20 jobs at once — it handles them all in one go.
 
 > You decide who to apply to. AI gets every application ready.
 
