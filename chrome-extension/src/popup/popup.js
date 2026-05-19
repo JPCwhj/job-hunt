@@ -95,7 +95,7 @@ function buildExportPayload() {
   return {
     format: JH_SCHEMA.FORMAT,
     version: JH_SCHEMA.VERSION,
-    source: JH_SCHEMA.SOURCE_BOSS,
+    source: JH_SCHEMA.SOURCE,
     exported_at: new Date().toISOString(),
     jobs: jobs
   };

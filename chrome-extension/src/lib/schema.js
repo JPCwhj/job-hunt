@@ -2,7 +2,8 @@
 const JH_SCHEMA = {
   FORMAT: "job-hunt-jobs",
   VERSION: "1",
-  SOURCE_BOSS: "chrome-extension-boss",
+  SOURCE_BOSS: "chrome-extension-boss",   // 保留兼容旧数据
+  SOURCE: "chrome-extension",             // 多平台通用
   STORAGE_KEY: "jh_jobs_v1"
 };
 

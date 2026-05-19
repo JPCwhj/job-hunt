@@ -99,9 +99,18 @@ async function jh51ParsePage() {
     const parts = fullText.split(splitRe);
     if (parts.length >= 3) {
       job.job_description  = parts[0].replace(/^岗位职责\s*[：:]\s*/i, "").trim();
-      job.job_requirements = parts.slice(2).join("").replace(/^[：:\s]+/, "").trim();
+      // 截断末尾的「职能类别」「上班地址」等页面附加标签
+      job.job_requirements = parts.slice(2).join("")
+        .replace(/^[：:\s]+/, "")
+        .replace(/\n+职能类别[：:][\s\S]*$/i, "")
+        .replace(/\n+上班地址[：:][\s\S]*$/i, "")
+        .trim();
     } else {
-      job.job_description = fullText.replace(/^岗位职责\s*[：:]\s*/i, "").trim();
+      job.job_description = fullText
+        .replace(/^岗位职责\s*[：:]\s*/i, "")
+        .replace(/\n+职能类别[：:][\s\S]*$/i, "")
+        .replace(/\n+上班地址[：:][\s\S]*$/i, "")
+        .trim();
     }
   }
 
