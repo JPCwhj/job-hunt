@@ -329,7 +329,7 @@ function jhMountFab() {
   jhSetFabContent(btn, "⭐", "加入清单", false);
   btn.addEventListener("click", () => jhOnFabClick(btn));
   document.body.appendChild(btn);
-  jhMakeDraggable(btn, "jh-fab-pos-boss");
+  jhMakeDraggable(btn, "jh-fab-pos");
   jhRefreshFabState(btn);
 }
 

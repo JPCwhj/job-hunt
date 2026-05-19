@@ -177,7 +177,7 @@ function jhZpMountFab() {
   jhZpSetFabContent(btn, "⭐", "加入清单", false);
   btn.addEventListener("click", () => jhZpOnFabClick(btn));
   document.body.appendChild(btn);
-  jhMakeDraggable(btn, "jh-fab-pos-zhaopin");
+  jhMakeDraggable(btn, "jh-fab-pos");
   jhZpRefreshFabState(btn);
 }
 

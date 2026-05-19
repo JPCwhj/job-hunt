@@ -209,7 +209,7 @@ function jhLpMountFab() {
   jhLpSetFabContent(btn, "⭐", "加入清单", false);
   btn.addEventListener("click", () => jhLpOnFabClick(btn));
   document.body.appendChild(btn);
-  jhMakeDraggable(btn, "jh-fab-pos-liepin");
+  jhMakeDraggable(btn, "jh-fab-pos");
   jhLpRefreshFabState(btn);
 }
 

@@ -190,7 +190,7 @@ function jh51MountFab() {
   jh51SetFabContent(btn, "⭐", "加入清单", false);
   btn.addEventListener("click", () => jh51OnFabClick(btn));
   document.body.appendChild(btn);
-  jhMakeDraggable(btn, "jh-fab-pos-51job");
+  jhMakeDraggable(btn, "jh-fab-pos");
   jh51RefreshFabState(btn);
 }
 
