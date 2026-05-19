@@ -76,19 +76,34 @@ async function jhParseBossDetailPage() {
   const panel = jhFindRightPanel();
   const root = panel || document;
 
-  // 诊断：看详情页上能找到哪些关键元素
+  // 诊断：详情页选择器探查
+  const snap = (sel, r) => { const e = (r||document).querySelector(sel); return e ? e.innerText.trim().slice(0,80) : null; };
+  const snapAll = (sel, r) => Array.from((r||document).querySelectorAll(sel)).map(e=>e.innerText.trim().slice(0,60)).filter(Boolean).slice(0,8);
   jhSendDiag({
     url: location.href,
-    panelFound: !!panel,
     panelClass: panel ? panel.className : null,
-    jobNameEl: !!document.querySelector(".job-name"),
-    jobNameInPanel: panel ? !!panel.querySelector(".job-name") : null,
-    jobSalaryEl: !!document.querySelector(".job-salary"),
-    primaryTitle: document.title,
-    h1s: Array.from(document.querySelectorAll("h1")).map(e => e.textContent.trim()).slice(0,5),
-    jobDetailMain: !!document.querySelector(".job-detail-main"),
-    jobPrimaryBox: !!document.querySelector(".job-primary"),
-    jobDetailSection: !!document.querySelector(".job-detail-section"),
+    // 标题候选
+    "h1": snap("h1"),
+    ".name": snap(".name", panel),
+    ".job-name": snap(".job-name", panel),
+    // 薪资候选
+    ".salary": snap(".salary", panel),
+    ".salary-text": snap(".salary-text", panel),
+    "[class*=salary]": (() => { const e = panel && panel.querySelector('[class*="salary"]'); return e ? [e.className, e.innerText.trim().slice(0,40)] : null; })(),
+    // 标签
+    ".tag-list li": snapAll(".tag-list li", panel),
+    ".primary-bottom .tag-list li": snapAll(".primary-bottom .tag-list li"),
+    // 描述
+    ".job-sec-text": snap(".job-sec-text"),
+    "p.desc": snap("p.desc"),
+    ".job-detail-section .text": snap(".job-detail-section .text"),
+    // 公司/HR
+    ".sider-company": snap(".sider-company"),
+    ".company-info": snap(".company-info"),
+    ".boss-info": snap(".boss-info"),
+    ".job-boss-info": snap(".job-boss-info"),
+    // panel 直接子元素 class 列表
+    panelChildClasses: panel ? Array.from(panel.children).map(e=>e.className).slice(0,10) : [],
   });
 
   // job URL：优先用面板里的 job_detail 链接（分栏模式），否则用当前页 URL
