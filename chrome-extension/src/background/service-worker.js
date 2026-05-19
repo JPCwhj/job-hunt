@@ -5,6 +5,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     sendResponse({ ok: true });
     return true;
   }
+
 if (msg && msg.type === "jh-export") {
     const { filename, jsonText } = msg;
     // MV3 service worker 中没有 URL.createObjectURL，用 data URL

@@ -62,6 +62,10 @@ function jhExtractExternalId() {
   return null;
 }
 
+function jhSendDiag(data) {
+  try { chrome.runtime.sendMessage({ type: "jh-diag", data }); } catch(e) {}
+}
+
 async function jhParseBossDetailPage() {
   const job = jhEmptyJob();
   job.platform = "boss";
@@ -69,7 +73,23 @@ async function jhParseBossDetailPage() {
   job.external_id = jhExtractExternalId();
 
   // 分栏模式下把解析范围限制在右侧面板，避免抓到左侧列表的同名元素
-  const root = jhFindRightPanel() || document;
+  const panel = jhFindRightPanel();
+  const root = panel || document;
+
+  // 诊断：看详情页上能找到哪些关键元素
+  jhSendDiag({
+    url: location.href,
+    panelFound: !!panel,
+    panelClass: panel ? panel.className : null,
+    jobNameEl: !!document.querySelector(".job-name"),
+    jobNameInPanel: panel ? !!panel.querySelector(".job-name") : null,
+    jobSalaryEl: !!document.querySelector(".job-salary"),
+    primaryTitle: document.title,
+    h1s: Array.from(document.querySelectorAll("h1")).map(e => e.textContent.trim()).slice(0,5),
+    jobDetailMain: !!document.querySelector(".job-detail-main"),
+    jobPrimaryBox: !!document.querySelector(".job-primary"),
+    jobDetailSection: !!document.querySelector(".job-detail-section"),
+  });
 
   // job URL：优先用面板里的 job_detail 链接（分栏模式），否则用当前页 URL
   const detailLink = root.querySelector('a[href*="/job_detail/"]');
