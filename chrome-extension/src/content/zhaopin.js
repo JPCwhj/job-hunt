@@ -44,7 +44,7 @@ async function jhZpParsePage() {
 
     // 其余行按内容识别，避免城市/区域分行时导致字段错位
     for (const line of lines.slice(1)) {
-      if (/年以上|年经验|应届|不限经验|\d+-\d+年/.test(line)) {
+      if (/年以上|年经验|应届|经验不限|不限经验|\d+-\d+年/.test(line)) {
         if (!job.requirements.experience) job.requirements.experience = line;
       } else if (/本科|大专|硕士|博士|高中|中专|不限/.test(line)) {
         if (!job.requirements.education) job.requirements.education = line;
