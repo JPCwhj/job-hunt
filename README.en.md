@@ -99,13 +99,11 @@ You'll find the output HTML at `<current directory>/jobHuntSkillData/output/<run
 
 ---
 
-## Install the Skill
+## Install / Update Skill (same command for both)
 
 ```bash
 npx skills add JPCwhj/job-hunt -g -y --all
 ```
-
-Run the same command again to update to the latest version.
 
 ---
 

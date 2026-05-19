@@ -99,13 +99,11 @@ npx skills add JPCwhj/job-hunt -g -y --all
 
 ---
 
-## 安装 skill
+## 安装/更新 Skill（安装和更新同一条命令）
 
 ```bash
 npx skills add JPCwhj/job-hunt -g -y --all
 ```
-
-更新到最新版用同一条命令即可。
 
 ---
 
