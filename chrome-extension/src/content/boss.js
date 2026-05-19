@@ -162,15 +162,21 @@ let _jhFontMap = null; // null=未初始化, Map=就绪, false=不可用
 
 // ── ① 字体 cmap 解析 ─────────────────────────────────────────────────────
 
+function jhSendDiag(data) {
+  try { chrome.runtime.sendMessage({ type: "jh-diag", data }); } catch(e) {}
+}
+
 async function jhBuildFontMap() {
   try {
     // 1. 从 CSS @font-face 找 kanzhun-mix 字体 URL
     let fontUrl = null;
+    const allFonts = [];
     for (const sheet of document.styleSheets) {
       try {
         for (const rule of sheet.cssRules) {
           if (!(rule instanceof CSSFontFaceRule)) continue;
           const fam = rule.style.fontFamily.replace(/['"]/g, '').trim();
+          allFonts.push(fam);
           if (!/kanzhun/i.test(fam)) continue;
           const src = rule.style.getPropertyValue('src');
           const m = src.match(/url\(["']?([^"')]+)["']?\)/);
@@ -179,11 +185,14 @@ async function jhBuildFontMap() {
       } catch (e) { /* 跨域 sheet 跳过 */ }
       if (fontUrl) break;
     }
+    jhSendDiag({ step: "font-search", fontUrl, allFonts: allFonts.slice(0, 20) });
     if (!fontUrl) return false;
 
     // 2. 读取字体二进制（通常命中浏览器缓存，无额外网络请求）
     const buf = await fetch(fontUrl).then(r => r.arrayBuffer());
     const magic = new DataView(buf).getUint32(0);
+    const magicHex = magic.toString(16).padStart(8, '0');
+    jhSendDiag({ step: "font-magic", magicHex, bufLen: buf.byteLength });
 
     let cmapBuf;
     if (magic === 0x00010000 || magic === 0x4F54544F) {
@@ -191,12 +200,23 @@ async function jhBuildFontMap() {
     } else if (magic === 0x774F4646) {
       cmapBuf = await jhGetWOFF1Table(buf, 'cmap');  // WOFF1 (zlib)
     } else {
+      jhSendDiag({ step: "font-format", result: "WOFF2-or-unknown, fallback-to-canvas" });
       return false; // WOFF2 需 Brotli，当前不支持，走 Canvas 兜底
     }
+    jhSendDiag({ step: "cmap-buf", found: !!cmapBuf, cmapLen: cmapBuf ? cmapBuf.byteLength : 0 });
     if (!cmapBuf) return false;
 
-    return jhExtractPUADigitMap(cmapBuf);
+    const result = jhExtractPUADigitMap(cmapBuf);
+    if (result) {
+      const entries = [];
+      result.forEach((v, k) => entries.push(`U+${k.toString(16).toUpperCase()}=${v}`));
+      jhSendDiag({ step: "pua-map", count: result.size, entries: entries.slice(0, 30) });
+    } else {
+      jhSendDiag({ step: "pua-map", count: 0, result: "empty" });
+    }
+    return result;
   } catch (e) {
+    jhSendDiag({ step: "error", msg: String(e) });
     return false;
   }
 }
@@ -337,18 +357,35 @@ async function jhCanvasDecodeChar(ch) {
 
 async function jhDecodeSalary(rawText) {
   const chars = Array.from(rawText);
-  const hasPUA = chars.some(c => { const n = c.charCodeAt(0); return n >= 0xE000 && n <= 0xF8FF; });
+  const puaChars = chars.filter(c => { const n = c.charCodeAt(0); return n >= 0xE000 && n <= 0xF8FF; });
+  const hasPUA = puaChars.length > 0;
+  jhSendDiag({
+    step: "decode-salary",
+    rawText,
+    charCodes: chars.map(c => c.charCodeAt(0).toString(16)),
+    hasPUA,
+    puaCount: puaChars.length
+  });
   if (!hasPUA) return rawText;
 
   if (_jhFontMap === null) _jhFontMap = await jhBuildFontMap();
 
   let result = '';
+  const charLog = [];
   for (const ch of chars) {
     const code = ch.charCodeAt(0);
-    if (code < 0xE000 || code > 0xF8FF) { result += ch; continue; }
-    if (_jhFontMap && _jhFontMap.has(code)) { result += _jhFontMap.get(code); continue; }
-    result += await jhCanvasDecodeChar(ch); // 兜底
+    if (code < 0xE000 || code > 0xF8FF) { result += ch; charLog.push({cp: code.toString(16), via: 'pass'}); continue; }
+    if (_jhFontMap && _jhFontMap.has(code)) {
+      const d = _jhFontMap.get(code);
+      result += d;
+      charLog.push({cp: code.toString(16), via: 'cmap', digit: d});
+      continue;
+    }
+    const d = await jhCanvasDecodeChar(ch);
+    result += d;
+    charLog.push({cp: code.toString(16), via: 'canvas', digit: d});
   }
+  jhSendDiag({ step: "decode-result", result, charLog });
   return result;
 }
 
