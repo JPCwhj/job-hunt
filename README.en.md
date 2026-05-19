@@ -30,11 +30,11 @@ HR spends less than 10 seconds scanning a resume — **and how well your resume 
 
 | Scenario | Manual Approach | With job-hunt |
 |---|---|---|
-| Apply to 10 jobs | Research each JD, edit resume, write opener — **~1 day** | Send 10 screenshots, **all 10 tailored packages done in minutes** |
+| Apply to 10 jobs | Research each JD, edit resume, write opener — **~1 day** | Send 10 screenshots / collect 10 jobs via the extension in one go, **all 10 tailored packages done in minutes** |
 | Decide where to apply | Gut feeling | Ranked by match score — **data-driven** |
 | Evaluation criteria | Subjective, fatigue-prone | AI applies the same STAR framework — **consistent** |
 
-However many job screenshots you send, that's how many tailored resumes you get back — 5, 10, 20, whatever.
+However many jobs you import (by screenshot or extension), that's how many tailored resumes you get back — 5, 10, 20, whatever.
 
 ---
 
