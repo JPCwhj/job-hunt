@@ -152,68 +152,208 @@ async function jhParseBossDetailPage() {
   return job;
 }
 
-// ── kanzhun 字体 PUA 字符解码（薪资反爬绕过）────────────────────────────
-// Boss 直聘用 kanzhun-mix 字体把私有区字符（U+E000-U+F8FF）渲染成数字；
-// 用 Canvas 把 PUA 字符用 kanzhun-mix 渲染后与 Arial 渲染的 0-9 做像素对比。
-const _jhDigitCache = {}; // 缓存本次页面生命周期内已解码的 PUA→digit 映射
+// ── kanzhun 字体 PUA 字符解码（薪资反爬绕过）────────────────────────────────
+// Boss 直聘用 kanzhun-mix 自定义字体把私有区字符（U+E000-U+F8FF）渲染成数字。
+// 解码策略：
+//   ① 解析字体 cmap 表，通过 glyph ID 精确关联 PUA → ASCII 数字（100% 准确）
+//   ② 字体为 WOFF2 或解析失败时，Canvas 像素比对兜底
+
+let _jhFontMap = null; // null=未初始化, Map=就绪, false=不可用
+
+// ── ① 字体 cmap 解析 ─────────────────────────────────────────────────────
+
+async function jhBuildFontMap() {
+  try {
+    // 1. 从 CSS @font-face 找 kanzhun-mix 字体 URL
+    let fontUrl = null;
+    for (const sheet of document.styleSheets) {
+      try {
+        for (const rule of sheet.cssRules) {
+          if (!(rule instanceof CSSFontFaceRule)) continue;
+          const fam = rule.style.fontFamily.replace(/['"]/g, '').trim();
+          if (!/kanzhun/i.test(fam)) continue;
+          const src = rule.style.getPropertyValue('src');
+          const m = src.match(/url\(["']?([^"')]+)["']?\)/);
+          if (m) { fontUrl = new URL(m[1], location.href).href; break; }
+        }
+      } catch (e) { /* 跨域 sheet 跳过 */ }
+      if (fontUrl) break;
+    }
+    if (!fontUrl) return false;
+
+    // 2. 读取字体二进制（通常命中浏览器缓存，无额外网络请求）
+    const buf = await fetch(fontUrl).then(r => r.arrayBuffer());
+    const magic = new DataView(buf).getUint32(0);
+
+    let cmapBuf;
+    if (magic === 0x00010000 || magic === 0x4F54544F) {
+      cmapBuf = jhGetTTFTable(buf, 'cmap');          // TTF / OTF
+    } else if (magic === 0x774F4646) {
+      cmapBuf = await jhGetWOFF1Table(buf, 'cmap');  // WOFF1 (zlib)
+    } else {
+      return false; // WOFF2 需 Brotli，当前不支持，走 Canvas 兜底
+    }
+    if (!cmapBuf) return false;
+
+    return jhExtractPUADigitMap(cmapBuf);
+  } catch (e) {
+    return false;
+  }
+}
+
+function jhGetTTFTable(buf, tag) {
+  const dv = new DataView(buf);
+  const n = dv.getUint16(4);
+  const t = [tag.charCodeAt(0), tag.charCodeAt(1), tag.charCodeAt(2), tag.charCodeAt(3)];
+  for (let i = 0; i < n; i++) {
+    const b = 12 + i * 16;
+    if (dv.getUint8(b)===t[0] && dv.getUint8(b+1)===t[1] &&
+        dv.getUint8(b+2)===t[2] && dv.getUint8(b+3)===t[3]) {
+      return buf.slice(dv.getUint32(b+8), dv.getUint32(b+8) + dv.getUint32(b+12));
+    }
+  }
+  return null;
+}
+
+async function jhGetWOFF1Table(buf, tag) {
+  const dv = new DataView(buf);
+  const n = dv.getUint16(12);
+  const t = [tag.charCodeAt(0), tag.charCodeAt(1), tag.charCodeAt(2), tag.charCodeAt(3)];
+  for (let i = 0; i < n; i++) {
+    const b = 44 + i * 20;
+    if (dv.getUint8(b)===t[0] && dv.getUint8(b+1)===t[1] &&
+        dv.getUint8(b+2)===t[2] && dv.getUint8(b+3)===t[3]) {
+      const off = dv.getUint32(b+4), cl = dv.getUint32(b+8), ol = dv.getUint32(b+12);
+      const comp = buf.slice(off, off + cl);
+      if (cl === ol) return comp; // 未压缩
+      // zlib deflate 解压
+      const ds = new DecompressionStream('deflate');
+      const w = ds.writable.getWriter(), r = ds.readable.getReader();
+      w.write(new Uint8Array(comp)); w.close();
+      const chunks = [];
+      for (;;) { const {done, value} = await r.read(); if (done) break; chunks.push(value); }
+      const out = new Uint8Array(ol); let p = 0;
+      for (const c of chunks) { out.set(c, p); p += c.length; }
+      return out.buffer;
+    }
+  }
+  return null;
+}
+
+function jhExtractPUADigitMap(cmapBuf) {
+  const dv = new DataView(cmapBuf);
+  const charToGlyph = new Map();
+  const numTables = dv.getUint16(2);
+  for (let i = 0; i < numTables; i++) {
+    const subOff = dv.getUint32(4 + i * 8 + 4);
+    const fmt = dv.getUint16(subOff);
+    if (fmt === 4)       jhCmap4(dv, subOff, charToGlyph);
+    else if (fmt === 12) jhCmap12(dv, subOff, charToGlyph);
+  }
+
+  // ASCII 数字 '0'-'9' → glyph ID
+  const glyphToDigit = new Map();
+  for (let d = 0; d <= 9; d++) {
+    const g = charToGlyph.get(0x30 + d);
+    if (g) glyphToDigit.set(g, String(d));
+  }
+
+  // PUA 字符通过共享 glyph ID 映射到数字
+  const puaMap = new Map();
+  for (const [cp, gid] of charToGlyph) {
+    if (cp >= 0xE000 && cp <= 0xF8FF) {
+      const d = glyphToDigit.get(gid);
+      if (d !== undefined) puaMap.set(cp, d);
+    }
+  }
+  return puaMap.size > 0 ? puaMap : false;
+}
+
+// OpenType cmap format 4（BMP 段映射）
+function jhCmap4(dv, base, out) {
+  const seg = dv.getUint16(base + 6) >> 1;
+  const eb = base + 14, sb = eb + 2 + seg*2, db = sb + seg*2, rb = db + seg*2;
+  for (let i = 0; i < seg; i++) {
+    const end = dv.getUint16(eb + i*2), start = dv.getUint16(sb + i*2);
+    const delta = dv.getInt16(db + i*2), ro = dv.getUint16(rb + i*2);
+    if (start === 0xFFFF) break;
+    for (let c = start; c <= end; c++) {
+      let gid;
+      if (ro === 0) {
+        gid = (c + delta) & 0xFFFF;
+      } else {
+        const raw = dv.getUint16(rb + i*2 + ro + (c - start) * 2);
+        gid = raw !== 0 ? (raw + delta) & 0xFFFF : 0;
+      }
+      if (gid !== 0) out.set(c, gid);
+    }
+  }
+}
+
+// OpenType cmap format 12（全 Unicode 映射）
+function jhCmap12(dv, base, out) {
+  const ng = dv.getUint32(base + 12);
+  for (let i = 0; i < ng; i++) {
+    const g = base + 16 + i * 12;
+    const sc = dv.getUint32(g), ec = dv.getUint32(g+4), sg = dv.getUint32(g+8);
+    for (let c = sc; c <= ec; c++) out.set(c, sg + (c - sc));
+  }
+}
+
+// ── ② Canvas 像素比对（cmap 解析不可用时兜底）────────────────────────────
+
+const _jhCanvasCache = {};
+
+async function jhCanvasDecodeChar(ch) {
+  const code = ch.charCodeAt(0);
+  if (_jhCanvasCache[code] !== undefined) return _jhCanvasCache[code];
+  try {
+    await document.fonts.ready;
+    const W = 32, H = 40;
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d'); ctx.textBaseline = 'alphabetic';
+    const refFont = `20px "kanzhun-mix", Arial, sans-serif`;
+    const refs = {};
+    for (let d = 0; d <= 9; d++) {
+      ctx.clearRect(0,0,W,H); ctx.font = refFont; ctx.fillStyle = '#000';
+      ctx.fillText(String(d), 4, 24);
+      refs[d] = new Uint8ClampedArray(ctx.getImageData(0,0,W,H).data);
+    }
+    ctx.clearRect(0,0,W,H); ctx.font = `20px "kanzhun-mix"`; ctx.fillStyle = '#000';
+    ctx.fillText(ch, 4, 24);
+    const pix = ctx.getImageData(0,0,W,H).data;
+    let best = '?', score = Infinity;
+    for (let d = 0; d <= 9; d++) {
+      let s = 0; const ref = refs[d];
+      for (let i = 3; i < pix.length; i += 4) s += Math.abs(pix[i] - ref[i]);
+      if (s < score) { score = s; best = String(d); }
+    }
+    _jhCanvasCache[code] = best;
+    return best;
+  } catch(e) { return '?'; }
+}
+
+// ── 主解码入口 ────────────────────────────────────────────────────────────
 
 async function jhDecodeSalary(rawText) {
   const chars = Array.from(rawText);
   const hasPUA = chars.some(c => { const n = c.charCodeAt(0); return n >= 0xE000 && n <= 0xF8FF; });
   if (!hasPUA) return rawText;
 
-  try {
-    await document.fonts.ready; // 确保 kanzhun-mix 已加载
+  if (_jhFontMap === null) _jhFontMap = await jhBuildFontMap();
 
-    const W = 32, H = 40;
-    const canvas = document.createElement("canvas");
-    canvas.width = W; canvas.height = H;
-    const ctx = canvas.getContext("2d");
-    ctx.textBaseline = "alphabetic";
-
-    // 用 kanzhun-mix 构建 0-9 参考像素指纹（同字体比对，消除跨字体字形差异）
-    // 若 kanzhun-mix 无标准数字字形则自动 fallback 到 Arial
-    const refFont = `20px "kanzhun-mix", Arial, sans-serif`;
-    ctx.font = refFont;
-    const refs = {};
-    for (let d = 0; d <= 9; d++) {
-      ctx.clearRect(0, 0, W, H);
-      ctx.fillStyle = "#000";
-      ctx.fillText(String(d), 4, 24);
-      refs[d] = new Uint8ClampedArray(ctx.getImageData(0, 0, W, H).data);
-    }
-
-    // 解码每个 PUA 字符
-    let result = "";
-    for (const ch of chars) {
-      const code = ch.charCodeAt(0);
-      if (code < 0xE000 || code > 0xF8FF) { result += ch; continue; }
-      if (_jhDigitCache[code] !== undefined) { result += _jhDigitCache[code]; continue; }
-
-      ctx.font = `20px "kanzhun-mix"`;
-      ctx.clearRect(0, 0, W, H);
-      ctx.fillStyle = "#000";
-      ctx.fillText(ch, 4, 24);
-      const puaAlpha = ctx.getImageData(0, 0, W, H).data;
-
-      let best = "?", bestScore = Infinity;
-      for (let d = 0; d <= 9; d++) {
-        let score = 0;
-        const ref = refs[d];
-        for (let i = 3; i < puaAlpha.length; i += 4) score += Math.abs(puaAlpha[i] - ref[i]);
-        if (score < bestScore) { bestScore = score; best = String(d); }
-      }
-      _jhDigitCache[code] = best;
-      result += best;
-    }
-    return result;
-  } catch (e) {
-    return rawText; // 解码失败时保留原始文本（含不可见 PUA 字符）
+  let result = '';
+  for (const ch of chars) {
+    const code = ch.charCodeAt(0);
+    if (code < 0xE000 || code > 0xF8FF) { result += ch; continue; }
+    if (_jhFontMap && _jhFontMap.has(code)) { result += _jhFontMap.get(code); continue; }
+    result += await jhCanvasDecodeChar(ch); // 兜底
   }
+  return result;
 }
 
 
-// 追加到 boss.js 末尾。所有 DOM 用 createElement + textContent，禁用 innerHTML
+// ── 所有 DOM 用 createElement + textContent，禁用 innerHTML ──────────────
 
 function jhShowToast(msg) {
   let t = document.getElementById("jh-toast");
