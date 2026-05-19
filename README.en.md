@@ -192,7 +192,9 @@ If you'd rather skip screenshots, install the browser extension to bookmark jobs
 
 - **Works with all major hiring platforms**: any screenshot containing company name, job title, and JD is sufficient
 - **No auto-apply**: eliminates account ban risk
-- **Zero dependencies in screenshot mode**: you screenshot, AI parses — no browser extensions or MCP tools needed; the Chrome extension is an optional enhancement, not a requirement
+- **Two import modes, each with its own fit**:
+  - **Screenshot mode**: zero dependencies — no browser extensions or MCP tools needed, but your AI model must support vision (image recognition)
+  - **Chrome extension mode**: reads the page DOM directly and exports structured JSON, so no vision capability is required; the extension is an optional enhancement, not a requirement
 
 ---
 
