@@ -115,13 +115,9 @@ async function jhZpParsePage() {
     }
   }
 
-  // 职位标签：限定在当前岗位的 .jobs-deliver__tags 容器内，避免抓到推荐列表的标签
-  const tagsContainer = document.querySelector(".jobs-deliver__tags");
-  if (tagsContainer) {
-    job.tags = Array.from(tagsContainer.querySelectorAll(".jobs-deliver__tag"))
-      .map(e => (e.innerText || "").trim())
-      .filter(t => t && t.length < 30);
-  }
+  // 职位标签：智联页面上 .jobs-deliver__tag 元素分散在当前岗位和推荐列表中，
+  // 暂无可靠方式区分，留空；analyzer 不依赖此字段
+  job.tags = [];
 
   return job;
 }
