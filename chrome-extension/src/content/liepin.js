@@ -62,28 +62,7 @@ async function jhLpParsePage() {
     }
   }
 
-  // 公司信息：.job-detail-company-box
-  // 格式："璞泰来\n新能源 已上市 5000-10000人"
-  const compBox = document.querySelector(".job-detail-company-box") ||
-                  document.querySelector(".job-company-info-box");
-  if (compBox) {
-    const lines = (compBox.innerText || "").split("\n").map(l => l.trim()).filter(l => l);
-    job.company.name = lines[0] || null;
-    if (lines[1]) {
-      const attrs = lines[1].split(/\s+/).filter(s => s);
-      for (const a of attrs) {
-        if (/未融资|天使轮|Pre-[AB]|[A-Z]轮|已上市|国企|外资|合资|不需要融资/.test(a)) {
-          job.company.stage = a;
-        } else if (/\d+-\d+人|人以上|\d+人$/.test(a)) {
-          job.company.size = a;
-        } else if (!job.company.industry) {
-          job.company.industry = a;
-        }
-      }
-    }
-  }
-
-  // HR 信息：.content
+  // HR + 公司信息：.content
   // 格式："常先生 3分钟前在线 已认证\n人力行政总监 · 诚泰租赁"
   const contentEl = document.querySelector(".content");
   if (contentEl) {
@@ -92,13 +71,15 @@ async function jhLpParsePage() {
       // 姓名 = 第一个空格前的词
       const spaceIdx = lines[0].indexOf(" ");
       job.hr.name = spaceIdx > -1 ? lines[0].slice(0, spaceIdx) : lines[0];
-      // 活跃状态：含"在线"或"活跃"的词
-      const activeMatch = lines[0].match(/([\d]+[分小时天月]+前在线|当前在线|刚刚在线|今日活跃|[\d]+天内活跃)/);
+      // 活跃状态：处理"分钟/小时/天"等多字单位
+      const activeMatch = lines[0].match(/([\d]+(?:分钟|小时|天|月)前在线|当前在线|刚刚在线|今日活跃|[\d]+天内活跃)/);
       if (activeMatch) job.hr.active_status = activeMatch[1];
     }
     if (lines[1]) {
-      // "人力行政总监 · 诚泰租赁" → 取 "·" 前
-      job.hr.title = lines[1].split("·")[0].trim() || null;
+      // "人力行政总监 · 诚泰租赁" → HR职称取"·"前，公司名取"·"后
+      const dotParts = lines[1].split("·").map(s => s.trim());
+      job.hr.title    = dotParts[0] || null;
+      job.company.name = dotParts[1] || null;
     }
   }
 
@@ -121,9 +102,6 @@ async function jhLpParsePage() {
     const fullText = (introEl.innerText || "").trim()
       .replace(/^职位介绍\s*/i, "");  // 去掉顶部标题
 
-    const splitRe = /(任职要求|任职资格|岗位要求|职位要求|要求[:：])/;
-    const parts = fullText.split(splitRe);
-
     function cleanDesc(text) {
       return text
         .replace(/^(职责描述|岗位职责|职位描述|工作职责)\s*[：:\s]*/i, "")
@@ -131,12 +109,21 @@ async function jhLpParsePage() {
         .trim();
     }
     function cleanReqs(text) {
-      return text.replace(/^[】\s：:]+/, "").trim();
+      return text
+        .replace(/^(任职要求|任职资格|岗位要求|职位要求)\s*[：:]\s*/i, "")
+        .replace(/^[】\s：:]+/, "")
+        .trim();
     }
 
-    if (parts.length >= 3) {
-      job.job_description  = cleanDesc(parts[0]);
-      job.job_requirements = cleanReqs(parts.slice(2).join(""));
+    // 按行找第一个以"任职要求/任职资格/岗位要求/职位要求"开头的行（避免匹配正文中间）
+    const lines = fullText.split("\n");
+    const splitIdx = lines.findIndex(l =>
+      /^(任职要求|任职资格|岗位要求|职位要求)\s*[：:]?/.test(l.trim())
+    );
+
+    if (splitIdx > -1) {
+      job.job_description  = cleanDesc(lines.slice(0, splitIdx).join("\n"));
+      job.job_requirements = cleanReqs(lines.slice(splitIdx).join("\n"));
     } else {
       job.job_description = cleanDesc(fullText);
     }
