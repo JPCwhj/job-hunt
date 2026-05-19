@@ -115,15 +115,10 @@ async function jhZpParsePage() {
     }
   }
 
-  // 职位标签：.jobs-deliver__tags
-  const tagsEl = document.querySelector(".jobs-deliver__tags");
-  if (tagsEl) {
-    const text = (tagsEl.innerText || "").trim();
-    if (text) {
-      // 智联标签连续写在一起无分隔符，按换行或已知分隔处理
-      job.tags = text.split(/[\n，,、]/).map(t => t.trim()).filter(t => t && t.length < 20);
-    }
-  }
+  // 职位标签：每个 .jobs-deliver__tag 是独立元素
+  job.tags = Array.from(document.querySelectorAll(".jobs-deliver__tag"))
+    .map(e => (e.innerText || "").trim())
+    .filter(t => t && t.length < 30);
 
   return job;
 }
