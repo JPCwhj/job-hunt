@@ -117,7 +117,7 @@ async function jhLpParsePage() {
     function cleanReqs(text) {
       return stripTrailingNoise(
         text
-          .replace(/^(任职要求|任职资格|岗位要求|职位要求|Requirements)\s*[：:.]\s*/i, "")
+          .replace(/^(任职要求|任职资格要求?|岗位要求|职位要求|Requirements)\s*[：:.]?\s*/i, "")
           .replace(/^[】\s：:]+/, "")
           .trim()
       );
