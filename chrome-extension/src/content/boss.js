@@ -62,35 +62,109 @@ function jhExtractExternalId() {
   return null;
 }
 
-function jhSendDiag(data) {
-  try { chrome.runtime.sendMessage({ type: "jh-diag", data }); } catch(e) {}
-}
-
 async function jhParseBossDetailPage() {
   const job = jhEmptyJob();
   job.platform = "boss";
   job.saved_at = new Date().toISOString();
   job.external_id = jhExtractExternalId();
+  job.url = location.href;
 
-  // 分栏模式下把解析范围限制在右侧面板，避免抓到左侧列表的同名元素
-  const panel = jhFindRightPanel();
-  const root = panel || document;
+  // Boss 有两种页面布局，选择器完全不同：
+  //   详情页：/job_detail/*.html  → .info-primary / .job-sec-text / .sider-company
+  //   分栏页：/web/geek/jobs 等  → .job-name / p.desc / .boss-info-attr
+  const isDetailPage = /^\/job_detail\//.test(location.pathname);
 
-  // 诊断：info-primary 内部结构
-  const infoPrimary = document.querySelector(".info-primary");
-  jhSendDiag({
-    infoPrimaryHTML: infoPrimary ? infoPrimary.innerHTML.slice(0, 800) : null,
-    infoPrimaryChildren: infoPrimary ? Array.from(infoPrimary.children).map(e => ({
-      tag: e.tagName, cls: e.className, text: e.innerText.trim().slice(0, 80)
-    })) : [],
-  });
+  if (isDetailPage) {
+    await jhParseDetailLayout(job);
+  } else {
+    await jhParseSplitPaneLayout(job);
+  }
 
-  // job URL：优先用面板里的 job_detail 链接（分栏模式），否则用当前页 URL
+  return job;
+}
+
+// ── 详情页布局（/job_detail/*.html）─────────────────────────────────────────
+async function jhParseDetailLayout(job) {
+  // 标题 & 薪资
+  job.title = innerTxt(".info-primary .name h1") || innerTxt("h1");
+  const salaryRaw = innerTxt(".info-primary .name .salary");
+  const salaryText = salaryRaw ? await jhDecodeSalary(salaryRaw) : null;
+  job.salary.range = salaryText;
+  if (salaryText) {
+    const mc = salaryText.match(/(\d+)薪/);
+    if (mc) job.salary.monthly_count = parseInt(mc[1]);
+  }
+
+  // 城市 / 经验 / 学历（.info-primary p 里三个独立 span/a）
+  // 注意：Boss 源码里 "experience" 有拼写错误，class 是 text-experiece
+  job.location.city = innerTxt(".info-primary p .text-city");
+  job.requirements.experience = innerTxt(".info-primary p .text-experiece");
+  job.requirements.education  = innerTxt(".info-primary p .text-degree");
+
+  // 福利标签：.tag-container-new 直接子 .job-tags（排除 .tag-more 里的重复展开项）
+  job.benefits = Array.from(
+    document.querySelectorAll(".tag-container-new > .job-tags span")
+  ).map(e => e.textContent.trim()).filter(Boolean);
+
+  // 岗位描述（.job-sec-text 可能出现多次，拼接后再分段）
+  const secTexts = Array.from(document.querySelectorAll(".job-sec-text"));
+  const fullDesc = secTexts
+    .map(e => (e.innerText || "").trim())
+    .filter(t => t.length > 20)
+    .map(t => t.replace(/^职位描述\s*/i, "").trim())
+    .join("\n\n");
+  if (fullDesc) {
+    const splitRe = /(任职要求|岗位要求|任职资格|要求[:：])/;
+    const m = fullDesc.split(splitRe);
+    if (m.length >= 3) {
+      job.job_description = m[0].trim();
+      job.job_requirements = m.slice(2).join("").replace(/^[：:\s]+/, "").trim();
+    } else {
+      job.job_description = fullDesc;
+    }
+  }
+
+  // 公司信息：.sider-company 按行解析（公司名 / 融资阶段 / 规模 / 行业）
+  const siderEl = document.querySelector(".sider-company");
+  if (siderEl) {
+    const lines = (siderEl.innerText || "").split("\n")
+      .map(l => l.trim()).filter(l => l && l !== "公司基本信息" && l !== "查看全部职位");
+    if (lines.length > 0) job.company.name = lines[0];
+    for (const l of lines.slice(1)) {
+      if (/已上市|未上市|天使轮|Pre-[AB]|[A-Z]轮|上市公司|不需要融资/.test(l)) job.company.stage = l;
+      else if (/人以上|人$|\d+-\d+人/.test(l)) job.company.size = l;
+      else if (!job.company.industry) job.company.industry = l;
+    }
+  }
+
+  // HR 信息：.job-boss-info 按行解析（姓名 / 活跃状态 / 职位）
+  const bossInfoEl = document.querySelector(".job-boss-info");
+  if (bossInfoEl) {
+    const raw = bossInfoEl.innerText || "";
+    const lines = raw.split("\n").map(l => l.trim()).filter(l => l && l !== "·");
+    job.hr.name = lines[0] || null;
+    const activeIdx = lines.findIndex(l =>
+      /活跃|刚刚|\d+分钟|\d+小时|今日|昨日|\d+天前|\d+周前|\d+月前|\d+年前/.test(l)
+    );
+    if (activeIdx > 0) job.hr.active_status = lines[activeIdx];
+    // 职位在 "·" 符号之后
+    const dotAt = raw.indexOf("·");
+    if (dotAt > -1) {
+      const afterDot = raw.slice(dotAt + 1).trim().split("\n")[0].trim();
+      if (afterDot) job.hr.title = afterDot;
+    }
+  }
+}
+
+// ── 分栏布局（/web/geek/jobs 等）────────────────────────────────────────────
+async function jhParseSplitPaneLayout(job) {
+  const root = jhFindRightPanel() || document;
+
+  // job URL：优先用面板里的 job_detail 链接
   const detailLink = root.querySelector('a[href*="/job_detail/"]');
-  job.url = (detailLink && detailLink.href) || location.href;
+  if (detailLink && detailLink.href) job.url = detailLink.href;
 
-  // ── 标题 & 薪资 ─────────────────────────────────────────────────────────
-  // Boss 薪资用 kanzhun-mix 字体做 PUA 字符混淆，需 Canvas 解码
+  // 标题 & 薪资
   job.title = innerTxt(".job-name", root);
   const salaryRaw = innerTxt(".job-salary", root);
   const salaryText = salaryRaw ? await jhDecodeSalary(salaryRaw) : null;
@@ -100,36 +174,30 @@ async function jhParseBossDetailPage() {
     if (mc) job.salary.monthly_count = parseInt(mc[1]);
   }
 
-  // ── 城市 / 经验 / 学历：从 tag-list li 逐项识别 ─────────────────────────
+  // 城市 / 经验 / 学历：从 tag-list li 逐项识别
   const tagItems = txtAll(".tag-list li", root);
   tagItems.forEach(t => {
     if (/\d+年|应届/.test(t) && !job.requirements.experience) job.requirements.experience = t;
     if (/本科|硕士|博士|大专|学历|不限/.test(t) && !job.requirements.education) job.requirements.education = t;
   });
-  // 城市：第一个不匹配经验/学历模式的 tag 项
-  const cityTag = tagItems.find(
-    t => !/\d+年|应届|本科|硕士|博士|大专|学历|不限/.test(t)
-  );
+  const cityTag = tagItems.find(t => !/\d+年|应届|本科|硕士|博士|大专|学历|不限/.test(t));
   if (cityTag) job.location.city = cityTag;
 
-  // 区：从详细地址中提取（如"杭州滨江区中威大厦1313室" → "滨江区"）
-  // 先去掉城市名前缀，避免贪心匹配多吃（"杭州滨江区" → "滨江区"）
+  // 区：从详细地址中提取
   const addrDesc = txt(".job-address-desc", root);
   if (addrDesc) {
     const cityName = job.location.city || "";
     const strippedAddr = (cityName && addrDesc.startsWith(cityName))
-      ? addrDesc.slice(cityName.length)
-      : addrDesc;
+      ? addrDesc.slice(cityName.length) : addrDesc;
     const dm = strippedAddr.match(/^[一-龥]{2,4}(区|县)/);
     if (dm) job.location.district = dm[0];
   }
 
-  // ── 福利标签 & 岗位标签 ──────────────────────────────────────────────────
+  // 福利标签 & 岗位标签
   job.benefits = txtAll(".job-label-list li", root);
   job.tags = tagItems;
 
-  // ── 岗位描述：用 innerText 过滤 Boss 注入的 CSS 噪声 ────────────────────
-  // Boss 在 p.desc 里嵌入 <style>/.tiny-span{} 来干扰文字提取，innerText 可过滤
+  // 岗位描述：innerText 过滤 Boss 注入的 CSS 噪声（p.desc 里有隐藏 span）
   const descEl = root.querySelector("p.desc");
   if (descEl) {
     const raw = (descEl.innerText || "").trim();
@@ -145,15 +213,15 @@ async function jhParseBossDetailPage() {
     }
   }
 
-  // ── 公司名 + HR 职位：boss-info-attr 格式为「公司名 · HR职位」 ────────────
+  // 公司名 + HR 职位：boss-info-attr 格式为「公司名 · HR职位」
   const bossAttr = txt(".boss-info-attr", root);
   if (bossAttr) {
     const parts = bossAttr.split(/\s*[·・]\s*/);
     job.company.name = parts[0] ? parts[0].trim() : null;
-    job.hr.title = parts[1] ? parts[1].trim() : null;
+    job.hr.title    = parts[1] ? parts[1].trim() : null;
   }
 
-  // ── HR 姓名：h2.name 含「姓名 活跃状态」，去掉后半段 ───────────────────
+  // HR 姓名：h2.name 含「姓名 活跃状态」，去掉后半段
   const hrActiveText = txt(".boss-active-time", root);
   const hrNameEl = root.querySelector(".job-boss-info h2.name");
   if (hrNameEl) {
@@ -162,8 +230,6 @@ async function jhParseBossDetailPage() {
     job.hr.name = name || null;
   }
   job.hr.active_status = hrActiveText;
-
-  return job;
 }
 
 // ── kanzhun 字体 PUA 字符解码（薪资反爬绕过）────────────────────────────────

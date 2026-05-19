@@ -1,10 +1,5 @@
 // chrome-extension/src/background/service-worker.js
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  if (msg && msg.type === "jh-diag") {
-    console.log("[jh-diag]", JSON.stringify(msg.data, null, 2));
-    sendResponse({ ok: true });
-    return true;
-  }
 
 if (msg && msg.type === "jh-export") {
     const { filename, jsonText } = msg;
