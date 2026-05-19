@@ -20,7 +20,7 @@ function buildEmptyView() {
   empty.className = "jh-empty";
   empty.appendChild(document.createTextNode("还没有收藏岗位。"));
   empty.appendChild(document.createElement("br"));
-  empty.appendChild(document.createTextNode('到 Boss 详情页右下角点"⭐ 加入清单"。'));
+  empty.appendChild(document.createTextNode('打开任意平台岗位详情页，点击右下角"⭐ 加入清单"。'));
   return empty;
 }
 
@@ -139,7 +139,6 @@ async function onSelectAllClick() {
 
 async function onClearClick() {
   if (state.jobs.length === 0) return;
-  if (!confirm(`确认清空全部 ${state.jobs.length} 个收藏？此操作不可撤销。`)) return;
   await jhClearJobs();
   state.jobs = [];
   state.selected.clear();

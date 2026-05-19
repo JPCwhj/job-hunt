@@ -1,6 +1,19 @@
 // chrome-extension/src/lib/drag.js
 // 让 FAB 按钮可拖拽，位置持久化到 localStorage
 
+// Toast 定位到按钮正上方（供各平台 showToast 调用）
+function jhPositionToast(toast, btn) {
+  const rect = btn.getBoundingClientRect();
+  toast.style.right  = "auto";
+  toast.style.bottom = "auto";
+  // 水平居中对齐按钮，垂直贴在按钮上方 8px
+  const toastW = toast.offsetWidth || 160;
+  let left = rect.left + (rect.width - toastW) / 2;
+  left = Math.max(8, Math.min(window.innerWidth - toastW - 8, left));
+  toast.style.left = left + "px";
+  toast.style.top  = (rect.top - toast.offsetHeight - 8) + "px";
+}
+
 function jhMakeDraggable(btn, storageKey) {
   // 恢复上次保存的位置
   try {

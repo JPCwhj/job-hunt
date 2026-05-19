@@ -144,6 +144,8 @@ function jh51ShowToast(msg) {
     toast.id = "jh51-toast";
     document.body.appendChild(toast);
   }
+  const btn = document.getElementById("jh51-fab");
+  if (btn) jhPositionToast(toast, btn);
   toast.textContent = msg;
   toast.classList.add("jh51-show");
   clearTimeout(toast._timer);
@@ -192,6 +194,7 @@ function jh51MountFab() {
   document.body.appendChild(btn);
   jhMakeDraggable(btn, "jh-fab-pos");
   jh51RefreshFabState(btn);
+  jhOnStorageChange(() => jh51RefreshFabState(btn));
 }
 
 // ============ 初始化 ============

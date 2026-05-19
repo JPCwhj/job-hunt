@@ -283,9 +283,12 @@ function jhShowToast(msg) {
     t.id = "jh-toast";
     document.body.appendChild(t);
   }
+  const btn = document.getElementById("jh-fab");
+  if (btn) jhPositionToast(t, btn);
   t.textContent = msg;
   t.classList.add("jh-show");
-  setTimeout(() => t.classList.remove("jh-show"), 1800);
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove("jh-show"), 1800);
 }
 
 function jhSetFabContent(btn, icon, label, saved) {
@@ -331,6 +334,7 @@ function jhMountFab() {
   document.body.appendChild(btn);
   jhMakeDraggable(btn, "jh-fab-pos");
   jhRefreshFabState(btn);
+  jhOnStorageChange(() => jhRefreshFabState(btn));
 }
 
 jhMountFab();

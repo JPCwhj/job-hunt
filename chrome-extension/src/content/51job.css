@@ -23,8 +23,6 @@
 
 #jh51-toast {
   position: fixed;
-  right: 24px;
-  bottom: 140px;
   z-index: 999999;
   padding: 10px 16px;
   background: rgba(0, 0, 0, 0.78);

@@ -17,13 +17,35 @@ body {
 }
 .jh-title { font-weight: 600; }
 .jh-title #jh-count { color: #00b38a; }
-.jh-actions { display: flex; gap: 8px; }
-.jh-link {
-  background: none; border: none; color: #4a90e2;
-  font-size: 12px; cursor: pointer; padding: 2px 4px;
+.jh-actions { display: flex; gap: 6px; }
+.jh-btn {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  line-height: 1.5;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
-.jh-link:hover { text-decoration: underline; }
-.jh-link.jh-danger { color: #e74c3c; }
+.jh-btn-select {
+  background: none;
+  border: 1px solid #c8d0d8;
+  color: #546e7a;
+}
+.jh-btn-select:hover {
+  background: #edf0f2;
+  border-color: #9aaab5;
+  color: #37474f;
+}
+.jh-btn-clear {
+  background: none;
+  border: 1px solid #f5b8b8;
+  color: #e53935;
+}
+.jh-btn-clear:hover {
+  background: #ffebee;
+  border-color: #e53935;
+}
 .jh-list { flex: 1; overflow-y: auto; max-height: 380px; }
 .jh-empty {
   padding: 40px 20px; text-align: center;
@@ -46,11 +68,27 @@ body {
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .jh-item-remove {
+  flex-shrink: 0;
   margin-left: 8px;
-  background: none; border: none; color: #c0c4cc;
-  cursor: pointer; font-size: 14px;
+  width: 22px;
+  height: 22px;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  color: #b0bec5;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  padding: 0;
 }
-.jh-item-remove:hover { color: #e74c3c; }
+.jh-item-remove:hover {
+  background: #ffebee;
+  color: #e53935;
+}
 .jh-footer {
   padding: 10px 14px;
   border-top: 1px solid #e4e7ec;

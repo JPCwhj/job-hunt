@@ -131,6 +131,8 @@ function jhZpShowToast(msg) {
     toast.id = "jh-zp-toast";
     document.body.appendChild(toast);
   }
+  const btn = document.getElementById("jh-zp-fab");
+  if (btn) jhPositionToast(toast, btn);
   toast.textContent = msg;
   toast.classList.add("jh-zp-show");
   clearTimeout(toast._timer);
@@ -179,6 +181,7 @@ function jhZpMountFab() {
   document.body.appendChild(btn);
   jhMakeDraggable(btn, "jh-fab-pos");
   jhZpRefreshFabState(btn);
+  jhOnStorageChange(() => jhZpRefreshFabState(btn));
 }
 
 // ============ 初始化 ============

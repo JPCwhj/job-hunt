@@ -35,9 +35,16 @@ async function jhClearJobs() {
   await chrome.storage.local.remove(JH_SCHEMA.STORAGE_KEY);
 }
 
+function jhOnStorageChange(callback) {
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === "local" && JH_SCHEMA.STORAGE_KEY in changes) callback();
+  });
+}
+
 globalThis.jhLoadJobs = jhLoadJobs;
 globalThis.jhSaveJobs = jhSaveJobs;
 globalThis.jhUpsertJob = jhUpsertJob;
 globalThis.jhRemoveJob = jhRemoveJob;
 globalThis.jhHasJob = jhHasJob;
 globalThis.jhClearJobs = jhClearJobs;
+globalThis.jhOnStorageChange = jhOnStorageChange;

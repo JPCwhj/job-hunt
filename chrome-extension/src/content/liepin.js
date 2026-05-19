@@ -163,6 +163,8 @@ function jhLpShowToast(msg) {
     toast.id = "jh-lp-toast";
     document.body.appendChild(toast);
   }
+  const btn = document.getElementById("jh-lp-fab");
+  if (btn) jhPositionToast(toast, btn);
   toast.textContent = msg;
   toast.classList.add("jh-lp-show");
   clearTimeout(toast._timer);
@@ -211,6 +213,7 @@ function jhLpMountFab() {
   document.body.appendChild(btn);
   jhMakeDraggable(btn, "jh-fab-pos");
   jhLpRefreshFabState(btn);
+  jhOnStorageChange(() => jhLpRefreshFabState(btn));
 }
 
 // ============ 初始化 ============
