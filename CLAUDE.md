@@ -114,3 +114,8 @@ Claude Code 的运行模型：
 - ✅ Step 7 生成 shortlist.html（响应式，简历可编辑，一键导出 PDF）
 - ✅ Chrome 插件支持四平台：Boss 直聘、前程无忧、智联招聘、猎聘
 - ✅ FAB 按钮可拖拽，位置持久化，跨平台共享同一位置
+- ✅ Toast 提示跟随 FAB 按钮当前位置弹出（不再固定在右下角）
+- ✅ Popup 删除/清空岗位时，所有已打开的岗位详情页 FAB 状态通过 `chrome.storage.onChanged` 自动同步
+- ✅ Popup 导出成功后自动从列表移除已导出岗位，避免下次重复导出
+- ✅ chrome.storage 写入失败（配额满）时 toast 提示用户，不再静默失败
+- ✅ Popup UI 改版：胶囊按钮、圆形删除按钮、透明绿色文档图标

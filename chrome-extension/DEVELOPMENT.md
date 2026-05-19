@@ -18,7 +18,9 @@
 4. [Boss 直聘特殊机制](#4-boss-直聘特殊机制)
 5. [DOM 坏了：诊断与修复流程](#5-dom-坏了诊断与修复流程)
 6. [新增平台 Checklist](#6-新增平台-checklist)
-7. [文件结构](#7-文件结构)
+7. [存储与跨页同步](#7-存储与跨页同步)
+8. [Popup 行为约定](#8-popup-行为约定)
+9. [文件结构](#9-文件结构)
 
 ---
 
@@ -86,7 +88,7 @@ Boss 直聘有两种页面布局，解析逻辑完全不同：
 | 字段 | 选择器 | 解析说明 |
 |---|---|---|
 | `title` | `.info-primary .name h1` | 直接取 innerText |
-| `salary.range` | `.info-primary .name .salary` | 含 PUA 字符，需调 `jhDecodeSalary()` 解码；按 `·` 分割取前段 |
+| `salary.range` | `.info-primary .name .salary` | 含 PUA 字符，需调 `jhDecodeSalary()` 解码；解码后正则剥掉末尾 `·N薪` 后缀，保证 range 是纯薪资范围 |
 | `salary.monthly_count` | 同上 | 正则提取 `/(\d+)薪/` |
 | `location.city` | `.info-primary p .text-city` | 直接取 innerText |
 | `requirements.experience` | `.info-primary p .text-experiece` | **注意拼写错误**：Boss 源码中是 `experiece`（少一个 n） |
@@ -107,7 +109,7 @@ Boss 直聘有两种页面布局，解析逻辑完全不同：
 | 字段 | 选择器 | 解析说明 |
 |---|---|---|
 | `title` | `.job-name`（在右侧面板内） | 直接取 innerText |
-| `salary.range` | `.job-salary`（面板内） | 同上，需 PUA 解码 |
+| `salary.range` | `.job-salary`（面板内） | 同上，需 PUA 解码并剥掉末尾 `·N薪` |
 | `location.city` | `.tag-list li`（面板内） | 逐项识别：不含年/学历关键词的项 = 城市 |
 | `location.district` | `.job-address-desc`（面板内） | 去掉城市名前缀后，正则提取 `X区/X县` |
 | `requirements.experience` | `.tag-list li` | 含 `\d+年 / 应届` 的项 |
@@ -142,8 +144,8 @@ URL 格式：`https://jobs.51job.com/<city-code>/<id>.html`
 | `company.size` | `.com_tag` 逐行 | 匹配 `X-Y人 / X人以上` |
 | `company.industry` | `.com_tag` 逐行 | 不匹配上述两项的第一行 |
 | `hr.name` | `.iname` | 直接取 innerText |
-| `hr.title` | `.itag` | 格式 `"HR职称·活跃状态"`；`·` 前取职称 |
-| `hr.active_status` | `.itag` | `·` 后取活跃状态 |
+| `hr.title` | `.itag` | 含 `·` 时取前段；不含 `·` 时整行作为 title（部分页面只有职称，无活跃状态） |
+| `hr.active_status` | `.itag` | 仅在含 `·` 时取后段；否则为 null |
 | `job_description` | `.bmsg.job_msg` | 去掉 `"岗位职责 / 职位描述"` 前缀；去掉末尾 `"职能类别："` 和 `"上班地址："` 噪声 |
 | `job_requirements` | 同上，按关键词行分割后半段 | 关键词：`任职要求 / 任职资格 / 岗位要求 / 职位要求 / 要求：` |
 | `tags` | `.jtag span` 或 `.job-label span` | 岗位标签 |
@@ -163,10 +165,10 @@ URL 格式：`https://www.zhaopin.com/jobdetail/<id>.htm`
 | `title` | `h1` | 直接取 innerText |
 | `salary.range` | `.summary-planes__bottom` 第一行 | 格式 `"7000-9000元"` 或 `"7000-9000元·13薪"`；`·` 前取范围 |
 | `salary.monthly_count` | 同上 | 正则 `/(\d+)薪/` |
-| `location.city` | `.summary-planes__bottom` 第二行 | 格式 `"杭州 钱塘区"`；空格分割取 city/district |
+| `location.city` | `.summary-planes__bottom` 后续行 | **按内容匹配，不按行号**：遍历薪资行之后的每行，未命中经验/学历正则、且 city 尚未设置则取 city；district 在 city 已设置后从下一行（或同行空格切分第二段）补齐 |
 | `location.district` | 同上 | — |
-| `requirements.experience` | `.summary-planes__bottom` 第三行 | 直接取 |
-| `requirements.education` | `.summary-planes__bottom` 第四行 | 直接取 |
+| `requirements.experience` | `.summary-planes__bottom` 后续行 | 匹配 `年以上 / 年经验 / 应届 / 经验不限 / 不限经验 / \d+-\d+年` 的行 |
+| `requirements.education` | `.summary-planes__bottom` 后续行 | 匹配 `本科 / 大专 / 硕士 / 博士 / 高中 / 中专 / 不限` 的行 |
 | `company.name` | `.company-info__meta` 第一行 | 多行解析 |
 | `company.stage` | `.company-info__meta` 第二行 | 格式 `"未融资 · 100-299人 · 环保  已审核"`；按 `·` 分割，去掉 `"已审核"` 后匹配融资阶段关键词 |
 | `company.size` | 同上 | 匹配 `X-Y人 / X人以上` |
@@ -195,13 +197,13 @@ URL 格式：`https://www.liepin.com/job/<id>.shtml`
 | `location.district` | 同上 | — |
 | `requirements.experience` | 同上 | 双空格分割后第二段 |
 | `requirements.education` | 同上 | 双空格分割后第三段 |
-| `company.name` | `.content` 第二行 | 格式 `"人力行政总监 · 诚泰租赁"`；`·` 后取公司名 |
+| `company.name` | `.content` 第二行 | 含 `·` 时取后段（格式 `"职称 · 公司名"`）；不含 `·` 时整行作为公司名（部分岗位只展示公司名） |
 | `company.industry` | `aside` 元素 | 正则匹配 `企业行业：(.+)` |
 | `company.size` | `aside` 元素 | 正则匹配 `人数规模：(.+)` |
 | `company.stage` | `aside` 元素 | 正则匹配 `融资情况：(.+)` 或 `融资阶段：(.+)`；部分公司无此字段则为 null |
 | `hr.name` | `.content` 第一行 | 格式 `"常先生 3分钟前在线 已认证"`；第一个空格前取姓名 |
 | `hr.active_status` | `.content` 第一行 | 正则匹配 `X分钟/小时/天前在线 / 当前在线 / 今日活跃` 等 |
-| `hr.title` | `.content` 第二行 | `·` 前取职称 |
+| `hr.title` | `.content` 第二行 | 仅在含 `·` 时取前段；不含 `·` 则归为 company.name，title 为 null |
 | `tags` | `.job-apply-container-desc span` | 福利标签；无 span 时按空格拆分整行文字 |
 | `job_description` | `.job-intro-container` | 去掉 `"职位介绍"` 顶部标题；按行查找任职要求关键词分割；去掉末尾 `"其他信息 行业要求：…"` 噪声 |
 | `job_requirements` | 同上，分割后半段 | 关键词：`任职要求 / 任职资格要求 / 岗位要求 / Requirements` |
@@ -374,7 +376,40 @@ jhLgMountFab(); // 文件末尾初始化
 
 ---
 
-## 7. 文件结构
+## 7. 存储与跨页同步
+
+所有岗位通过 `chrome.storage.local` 持久化（key 由 `JH_SCHEMA.STORAGE_KEY` 定义，默认 `jh_jobs_v1`），随浏览器关闭/重启保留，仅在以下场景被清除：用户在 popup 点「清空」、导出成功后自动剔除已勾选项、用户卸载插件。
+
+**默认配额 10MB**，按一条岗位 2–5KB 估算，约 2000–5000 条岗位时会触发 `QUOTA_BYTES exceeded`。`jhUpsertJob` 在内容脚本里被 try-catch 包裹，写入失败会通过 Toast 提示「收藏失败：存储空间不足，请先导出并清空」，不再静默失败。
+
+### 跨页面状态同步
+
+`src/lib/storage.js` 暴露 `jhOnStorageChange(callback)`，本质是封装的 `chrome.storage.onChanged` 监听器（只关心当前 STORAGE_KEY 的变化）。
+
+四个内容脚本在 `MountFab()` 末尾各注册一次 callback，回调内调本平台的 `RefreshFabState(btn)`：
+
+```javascript
+jhOnStorageChange(() => jhXxRefreshFabState(btn));
+```
+
+效果：popup 删除/清空岗位 → storage 变化 → 所有已打开的岗位详情页 FAB 重新查 `jhHasJob()` → 按钮自动从「✅ 已收藏」变回「⭐ 加入清单」。**不需要消息传递、不需要轮询**。
+
+---
+
+## 8. Popup 行为约定
+
+`src/popup/popup.js` 关键行为：
+
+- **加载时默认全选**：`init()` 把所有 jobs 的 key 放进 `state.selected`，用户打开 popup 就能直接点导出
+- **「清空」无确认对话框**：早期版本调用 `confirm()` 会弹原生提示框，用户主动点清空已经是明确意图，无需再次确认
+- **导出成功后自动剔除已导出项**：`onExportClick` 收到 background 的 `{ok: true}` 响应后，循环调 `jhRemoveJob(key)` 删除 `state.selected` 内的条目，未勾选的保留；2.5 秒后重新 `render()` 以显示新列表
+- **单条删除按钮**：列表每行的 `×` 按钮调 `jhRemoveJob(key)` 后重新拉取并渲染
+
+> ⚠️ Popup 当前是**全量渲染**，没有虚拟滚动或分页。正常使用（导出即清）永远到不了瓶颈；但用户若刻意累积大量收藏不导出，几百条以上 popup 打开会明显变慢。极端情况下会先撞 storage 配额。
+
+---
+
+## 9. 文件结构
 
 ```
 chrome-extension/

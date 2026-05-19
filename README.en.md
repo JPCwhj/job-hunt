@@ -93,23 +93,23 @@ npx skills add JPCwhj/job-hunt -g -y
 
 ---
 
-## Browser Extension (Optional, Boss Zhipin only)
+## Browser Extension (Optional)
 
-If you primarily apply via Boss Zhipin, install the browser extension to skip screenshots:
+If you'd rather skip screenshots, install the browser extension to bookmark jobs and batch-export them. **Currently supports four major hiring platforms.**
 
 1. Clone the repo: `git clone https://github.com/JPCwhj/job-hunt.git`
 2. Open Chrome → `chrome://extensions/`
 3. Enable "Developer mode" (top right)
 4. Click "Load unpacked", select the `chrome-extension/` folder in the repo
-5. On a Boss Zhipin job detail page, a "⭐ Add to list" floating button will appear
+5. On any supported platform's job detail page, a "⭐ Add to list" floating button will appear (draggable to any position; the four platforms share the same saved position)
 
 **Usage**:
-- Click "⭐ Add to list" on any detail page
-- Click the extension icon, select jobs, click "Export"
-- The file downloads to your default Downloads folder
+- On any supported platform's detail page, click "⭐ Add to list" to collect jobs
+- Click the extension icon, select the jobs you want, click "Export"
+- The `.jobs.json` file downloads to your default Downloads folder (exported jobs are automatically cleared from the collection list)
 - Drag the `.jobs.json` file into Claude Code's `/job-hunt` flow
 
-**For other platforms, continue using screenshots**.
+**For platforms not yet supported**: continue using screenshots.
 
 ---
 
