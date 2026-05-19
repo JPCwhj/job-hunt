@@ -1,10 +1,13 @@
 {
   "manifest_version": 3,
   "name": "job-hunt 岗位收藏夹",
-  "version": "0.1.0",
-  "description": "在 Boss 直聘详情页一键收藏岗位，导出 .jobs.json 给 job-hunt skill 使用",
+  "version": "0.2.0",
+  "description": "在 Boss 直聘、前程无忧详情页一键收藏岗位，导出 .jobs.json 给 job-hunt skill 使用",
   "permissions": ["storage", "downloads"],
-  "host_permissions": ["https://www.zhipin.com/*"],
+  "host_permissions": [
+    "https://www.zhipin.com/*",
+    "https://jobs.51job.com/*"
+  ],
   "action": {
     "default_popup": "src/popup/popup.html",
     "default_title": "job-hunt 收藏夹",
@@ -20,6 +23,12 @@
       "matches": ["https://www.zhipin.com/job_detail/*", "https://www.zhipin.com/web/geek/jobs*"],
       "js": ["src/lib/schema.js", "src/lib/storage.js", "src/content/boss.js"],
       "css": ["src/content/boss.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://jobs.51job.com/*.html"],
+      "js": ["src/lib/schema.js", "src/lib/storage.js", "src/content/51job.js"],
+      "css": ["src/content/51job.css"],
       "run_at": "document_idle"
     }
   ],

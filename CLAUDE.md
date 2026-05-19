@@ -128,6 +128,7 @@ Claude Code 的运行模型：
 - ✅ Chrome 插件 DOM 选择器全面修正（基于实机诊断）：使用 background service worker console 绕开 Boss 反 DevTools 检测，找到真实 class names；修正 tag-list li（城市/经验/学历）、p.desc+innerText（岗位描述，过滤 CSS 注入噪声）、boss-info-attr（公司名+HR职位）、boss-active-time（HR活跃状态）、job-label-list li（标签）等核心选择器；三个岗位实测验证通过
 - ✅ Chrome 插件薪资解码修正：Boss 用 kanzhun-Regular 字体将薪资数字替换为 PUA 字符（U+E000-U+F8FF），cmap 表只含 PUA 条目、不含 ASCII '0'-'9'，glyph ID 关联法无效；实测发现线性映射 `digit = codepoint - 0xE031`（U+E031→0 … U+E03A→9），改用算术解码，无网络请求，无风控风险
 - ✅ Chrome 插件新增详情页布局支持（`/job_detail/*.html`）：与分栏页选择器完全不同，按 pathname 分支处理；详情页关键选择器：`.info-primary .name h1`（标题）、`.info-primary .name .salary`（薪资）、`.text-city/.text-experiece/.text-degree`（城市/经验/学历，注意 Boss 源码将 experience 拼成 experiece）、`.tag-container-new > .job-tags span`（福利，需 Set 去重）、`.job-sec-text`（描述）、`.sider-company`（公司多行解析）、`.job-boss-info`（HR 多行解析）；岗位描述分段正则补充「职位要求」关键词；分栏页 HR name 加换行兜底去掉活跃状态文字
+- ✅ Chrome 插件新增前程无忧（51job）适配：`src/content/51job.js` + `51job.css`，manifest 注册 `https://jobs.51job.com/*.html`；选择器：`h1`（职位名）、`.cn`（薪资行，格式 "X-Y万·13薪"）、`.msg.ltype`（城市/经验/学历，`|` 分割）、`[class*=com_name]`（公司名）、`.com_tag`（公司属性多行解析）、`.iname`（HR 姓名）、`.itag`（HR 职称+活跃状态，`·` 分割）、`.bmsg.job_msg`（岗位描述）、`.jtag`（福利）；external_id 从 URL pathname 数字段提取
 
 ## Boss 直聘反爬机制速查（Chrome 插件开发必读）
 
