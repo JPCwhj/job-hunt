@@ -97,20 +97,29 @@ async function jh51ParsePage() {
     const fullText = (descEl.innerText || "").trim();
     const splitRe = /(任职要求|任职资格|岗位要求|职位要求|要求[:：])/;
     const parts = fullText.split(splitRe);
+
+    // 清理描述文本的公共函数
+    function cleanDesc(text) {
+      return text
+        .replace(/^(岗位职责|职位描述)\s*[：:\s]*/i, "")  // 去除开头标签
+        .replace(/\s*【\s*$/,  "")                         // 去除末尾悬空的【（因分割留下）
+        .replace(/\n+职能类别[：:][\s\S]*$/i, "")          // 截断职能类别
+        .replace(/\n+上班地址[：:][\s\S]*$/i, "")          // 截断上班地址
+        .trim();
+    }
+    function cleanReqs(text) {
+      return text
+        .replace(/^[】\s：:]+/, "")                        // 去除开头的】（因分割留下）
+        .replace(/\n+职能类别[：:][\s\S]*$/i, "")
+        .replace(/\n+上班地址[：:][\s\S]*$/i, "")
+        .trim();
+    }
+
     if (parts.length >= 3) {
-      job.job_description  = parts[0].replace(/^岗位职责\s*[：:]\s*/i, "").trim();
-      // 截断末尾的「职能类别」「上班地址」等页面附加标签
-      job.job_requirements = parts.slice(2).join("")
-        .replace(/^[：:\s]+/, "")
-        .replace(/\n+职能类别[：:][\s\S]*$/i, "")
-        .replace(/\n+上班地址[：:][\s\S]*$/i, "")
-        .trim();
+      job.job_description  = cleanDesc(parts[0]);
+      job.job_requirements = cleanReqs(parts.slice(2).join(""));
     } else {
-      job.job_description = fullText
-        .replace(/^岗位职责\s*[：:]\s*/i, "")
-        .replace(/\n+职能类别[：:][\s\S]*$/i, "")
-        .replace(/\n+上班地址[：:][\s\S]*$/i, "")
-        .trim();
+      job.job_description = cleanDesc(fullText);
     }
   }
 
