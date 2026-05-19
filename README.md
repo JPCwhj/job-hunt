@@ -107,7 +107,7 @@ npx skills add JPCwhj/job-hunt -g -y --all
 - 在任一支持平台的岗位详情页点"⭐ 加入清单"，攒到一批
 - 点浏览器右上角插件图标，勾选要导出的岗位
 - 点"导出"，`.jobs.json` 文件下载到浏览器默认 Downloads 目录（导出成功后已导出的岗位会自动从收藏列表清空）
-- 把 `.jobs.json` 文件拖给 Claude Code 的 `/job-hunt` 流程
+- 启动 `/job-hunt` 流程，等走到「上传岗位」那一步时再把 `.jobs.json` 文件发给 AI（不是一开始就发）
 
 **未覆盖的平台**：继续用截图方式。
 

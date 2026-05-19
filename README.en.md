@@ -107,7 +107,7 @@ If you'd rather skip screenshots, install the browser extension to bookmark jobs
 - On any supported platform's detail page, click "⭐ Add to list" to collect jobs
 - Click the extension icon, select the jobs you want, click "Export"
 - The `.jobs.json` file downloads to your default Downloads folder (exported jobs are automatically cleared from the collection list)
-- Drag the `.jobs.json` file into Claude Code's `/job-hunt` flow
+- Start the `/job-hunt` flow, and only send the `.jobs.json` file when it reaches the "upload jobs" step (not at the very beginning)
 
 **For platforms not yet supported**: continue using screenshots.
 
