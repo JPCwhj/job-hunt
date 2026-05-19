@@ -117,7 +117,7 @@ async function jhLpParsePage() {
     function cleanReqs(text) {
       return stripTrailingNoise(
         text
-          .replace(/^(任职要求|任职资格|岗位要求|职位要求)\s*[：:]\s*/i, "")
+          .replace(/^(任职要求|任职资格|岗位要求|职位要求|Requirements)\s*[：:.]\s*/i, "")
           .replace(/^[】\s：:]+/, "")
           .trim()
       );
@@ -136,6 +136,32 @@ async function jhLpParsePage() {
       job.job_description = stripTrailingNoise(cleanDesc(fullText));
     }
   }
+
+  // ── 临时诊断：找公司 industry/stage/size ──
+  (function diagComp() {
+    function snap(sel) {
+      const el = document.querySelector(sel);
+      return el ? (el.innerText||"").trim().slice(0,100) : null;
+    }
+    // 从 .content 出发，找同级或父级的公司属性容器
+    const contentEl = document.querySelector(".content");
+    const contentParent = contentEl?.parentElement;
+    const siblings = contentParent
+      ? Array.from(contentParent.children)
+          .map(el => ({ cls: el.className?.toString().slice(0,60), txt: (el.innerText||"").trim().slice(0,80) }))
+          .filter(x => x.txt)
+      : [];
+    chrome.runtime.sendMessage({ type: "jh-diag", data: {
+      contentParentClass: contentParent?.className?.toString(),
+      siblings,
+      compTagAll: Array.from(document.querySelectorAll("[class*='comp-tag'],[class*='company-tag'],[class*='ent-tag']"))
+        .map(el => ({ cls: el.className?.toString().slice(0,50), txt: (el.innerText||"").trim().slice(0,60) }))
+        .filter(x => x.txt),
+      jobCompanyInfo: snap(".job-company-info-box"),
+      companyBasic: snap("[class*='company-basic']") || snap("[class*='ent-basic']"),
+    }});
+  })();
+  // ── 诊断结束 ──
 
   return job;
 }
