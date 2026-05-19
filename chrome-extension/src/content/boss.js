@@ -76,13 +76,13 @@ async function jhParseBossDetailPage() {
   const panel = jhFindRightPanel();
   const root = panel || document;
 
-  // 诊断：tag-container-new 内部结构
-  const tagContainer = document.querySelector(".tag-container-new");
+  // 诊断：info-primary 内部结构
+  const infoPrimary = document.querySelector(".info-primary");
   jhSendDiag({
-    tagContainerHTML: tagContainer ? tagContainer.innerHTML.slice(0, 600) : null,
-    tagContainerChildren: tagContainer ? Array.from(tagContainer.children).map(e => ({tag: e.tagName, cls: e.className, text: e.innerText.trim().slice(0,60)})) : [],
-    "tag-container-new li": Array.from(document.querySelectorAll(".tag-container-new li")).map(e=>e.innerText.trim()).filter(Boolean),
-    "tag-container-new span": Array.from(document.querySelectorAll(".tag-container-new span")).map(e=>e.innerText.trim()).filter(Boolean).slice(0,10),
+    infoPrimaryHTML: infoPrimary ? infoPrimary.innerHTML.slice(0, 800) : null,
+    infoPrimaryChildren: infoPrimary ? Array.from(infoPrimary.children).map(e => ({
+      tag: e.tagName, cls: e.className, text: e.innerText.trim().slice(0, 80)
+    })) : [],
   });
 
   // job URL：优先用面板里的 job_detail 链接（分栏模式），否则用当前页 URL
