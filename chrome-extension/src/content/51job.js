@@ -84,10 +84,10 @@ async function jh51ParsePage() {
     const raw = (itagEl.innerText || "").trim();
     const dotIdx = raw.indexOf("·");
     if (dotIdx > -1) {
-      job.hr.title       = raw.slice(0, dotIdx).trim() || null;
+      job.hr.title         = raw.slice(0, dotIdx).trim() || null;
       job.hr.active_status = raw.slice(dotIdx + 1).trim() || null;
     } else {
-      job.hr.active_status = raw || null;
+      job.hr.title = raw || null;
     }
   }
 

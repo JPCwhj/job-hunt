@@ -66,7 +66,7 @@ async function jhZpParsePage() {
       for (const a of attrs) {
         if (/未融资|天使轮|Pre-[AB]|[A-Z]轮|上市公司|国企|外资|合资|不需要融资/.test(a)) {
           job.company.stage = a;
-        } else if (/\d+-\d+人|人以上|\d+人$/.test(a)) {
+        } else if (/\d+-\d+人|\d+人以上|\d+人以下|\d+人$/.test(a)) {
           job.company.size = a;
         } else if (!job.company.industry) {
           job.company.industry = a;
