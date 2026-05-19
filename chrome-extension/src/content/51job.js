@@ -1,5 +1,6 @@
 // chrome-extension/src/content/51job.js
 // 前程无忧岗位详情页解析 + 收藏按钮
+console.log("[job-hunt] 51job.js 已注入，pathname:", location.pathname);
 
 // ============ 工具函数 ============
 
@@ -166,6 +167,7 @@ async function jh51OnFabClick(btn) {
 }
 
 function jh51MountFab() {
+  console.log("[job-hunt] jh51MountFab called");
   if (document.getElementById("jh51-fab")) return;
   const btn = document.createElement("button");
   btn.id = "jh51-fab";
