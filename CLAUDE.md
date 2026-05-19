@@ -91,6 +91,14 @@ Claude Code 的运行模型：
 - ❌ 绝不在 Step 3 fetcher 返回后到 Step 7 之间写任何文字，包括状态通知和子 skill 返回内容回显
 - ✅ 每步直接以工具调用衔接下一步（Bash 更新 state.json → Skill call 下一步）
 
+## Chrome 插件
+
+插件源码在 `chrome-extension/` 目录，支持 Boss 直聘、前程无忧、智联招聘、猎聘四个平台。用户在岗位详情页点击悬浮按钮收藏，通过 Popup 导出 `.jobs.json`，主 skill Step 3 识别该文件后直接写入 jd-pool（跳过截图 OCR）。
+
+**插件只读 DOM，不调平台 API，不模拟点击，不存 Cookie。**
+
+维护、新增平台、DOM 选择器映射、Boss 反爬机制详见：[chrome-extension/DEVELOPMENT.md](chrome-extension/DEVELOPMENT.md)
+
 ## 依赖的外部 skill
 
 - 无（简历只接收 .md 或粘贴文本，不依赖外部 skill）
@@ -100,94 +108,9 @@ Claude Code 的运行模型：
 - ✅ 设计文档、实现计划已完成
 - ✅ fetcher 改为截图解析，支持全平台，去掉 bb-browser 依赖
 - ✅ 输入流程简化：截图 + 简历文本，无需配置文件
-- ✅ 排序简化为 match score；输出**只产 shortlist.html**（不再生成 shortlist.md，避免冗余和聊天屏幕被刷屏）
-- ✅ subcommand 统一为 `fetch`（非 `import`），state.json 对应字段为 `fetched`
-- ✅ analyzer/tailor 路径 bug 修复（`boss-<id>` → `<id>`）
-- ✅ STAR 对齐分析移入 tailor Step 1.0（analyzer 只输出评分，不生成改写建议）
-- ✅ 全流程自动化修复：Step 4-7 之间无文字输出，纯工具调用链
-- ✅ analyzer/tailor 均有逐 JD 进度输出
-- ✅ 新增 Step 2.5：简历质量评估（STAR/PAR 法则，新上传简历时触发，用户可选择修改或继续）
-- ✅ Step 2 支持原地替换简历：缓存已存在时提供替换入口，用户直接发新简历即可，无需 clean
-- ✅ 截图上传流程简化：去掉「开始分析」触发词，fetcher 分组确认后自动往下走，减少一轮冗余交互
-- ✅ 截图新增目录路径输入方式：用户可告知截图所在目录，skill 用 find -maxdepth 1 扫描图片文件后自动读取，不递归子目录
-- ✅ 简历评估过滤规则重写为三条：①区块级跳过（技能/教育/个人信息等整块略过，语义判断不限死名称）②行级跳过（无行动动词且无结果描述的行跳过，部门名中的动词性词语不算行动动词）③剩下的才评估
-- ✅ 所有生成目录统一收纳到 jobHuntSkillData/，data_dir = work_dir/jobHuntSkillData，全部路径引用已从 work_dir 替换为 data_dir
-- ✅ jobHuntSkillData/ 加入 .gitignore，防止简历缓存和输出文件被误提交
-- ✅ analyzer STAR 拆解同步加入三条过滤规则：区块级跳过 → 行级跳过（工作经历头部行天然无动词无结果，自动跳过）→ 剩下才拆解，与 Step 2.5 一致
-- ✅ shortlist 删除 HR 信息行（hr.name / hr.active_status），只保留薪资、地点、分项分和定制简历链接
-- ✅ tailor 修复内容删减问题：技能列表只调顺序不得删减，项目经历每段条目数不得减少，「精简」明确为只缩短措辞
-- ✅ tailor 修复章节顺序错误：「经历排序」仅限同一章节内条目排序，顶层章节（专业技能/工作经历/项目经历/教育背景等）顺序冻结，不得互换
-- ✅ Step 2.5 评估末尾新增专业技能区块检查：若存在明显问题（虚浮词堆砌等）在「最值得优先改」末尾追加一句提示，无问题则省略
-- ✅ tailor 新增技能板块排序规则：对照 JD 将相关技能前移，语义识别板块名称（不依赖「专业技能」等固定名称），无标题时通过内容特征识别；保留程度词（熟练掌握/熟悉/了解等）和所有工具名/平台名；允许合并语义高度重叠的条目但不得丢失关键信息；所有改动记入 changelog 技能板块节
-- ✅ Step 2.5 + analyzer STAR 拆解新增空区块规则：区块经规则二全部跳过后，整个区块不生成任何评估/STAR条目，禁止捏造内容或从其他区块借调；analyzer 同时新增「必须完整处理所有有效条目，不得遗漏」约束
-- ✅ 全流程自动化强化：约束范围从「Step 4-7」扩展到「Step 3 fetcher 返回后」；fetcher/analyzer/tailor 三个子 skill 返回后均明确禁止回显/复述返回内容；fetcher 不再输出 ID 列表，主 skill 改为扫描 jd-pool 目录按 run_id 自取 ID，彻底切断对子 skill 文字输出的依赖
-- ✅ tailor 修复顶层章节顺序误判：规则示例中的章节顺序（如「专业技能/工作经历/项目经历」）被 Claude 误读为规范顺序，导致与原简历不符时自动"纠正"；现已明确括号内仅举例说明哪类章节属于顶层章节，不代表其应有顺序，实际顺序以原简历为准
-- ✅ Step 2.5 修复评估绕过过滤规则的问题：规则一→二→三已明确为强制先决条件，新增"不得根据公司名/职位名推断工作内容进行评估"约束，评估维度入口前加兜底 stop 条件，防止空区块（如只有头部行的「工作及教育经历」）被错误评估
-- ✅ Step 7 新增 HTML 输出：生成 shortlist.html（静态单文件，内嵌思源黑体+marked+html2pdf），左列表+右详情响应式布局，简历可编辑+localStorage 持久化，每岗位一键导出 PDF；保留所有原 MD 输出
-- ✅ 新增 Chrome 浏览器插件（仅 Boss 直聘）：详情页悬浮按钮 + 图标 popup 清单 → 导出 .jobs.json 到 Downloads；主 skill Step 3 新增 .jobs.json 识别分支，调 import_jobs.py 直接写入 jd-pool（跳过 OCR）；目录扫描分支同步支持图片 + .jobs.json 混合处理；插件源码在 `chrome-extension/` 目录，开发者模式加载安装；插件只读 DOM，不调 Boss API、不模拟点击、不存 cookie；所有 DOM 操作用 createElement + textContent，禁用 innerHTML
-- ✅ Chrome 插件 DOM 选择器全面修正（基于实机诊断）：使用 background service worker console 绕开 Boss 反 DevTools 检测，找到真实 class names；修正 tag-list li（城市/经验/学历）、p.desc+innerText（岗位描述，过滤 CSS 注入噪声）、boss-info-attr（公司名+HR职位）、boss-active-time（HR活跃状态）、job-label-list li（标签）等核心选择器；三个岗位实测验证通过
-- ✅ Chrome 插件薪资解码修正：Boss 用 kanzhun-Regular 字体将薪资数字替换为 PUA 字符（U+E000-U+F8FF），cmap 表只含 PUA 条目、不含 ASCII '0'-'9'，glyph ID 关联法无效；实测发现线性映射 `digit = codepoint - 0xE031`（U+E031→0 … U+E03A→9），改用算术解码，无网络请求，无风控风险
-- ✅ Chrome 插件新增详情页布局支持（`/job_detail/*.html`）：与分栏页选择器完全不同，按 pathname 分支处理；详情页关键选择器：`.info-primary .name h1`（标题）、`.info-primary .name .salary`（薪资）、`.text-city/.text-experiece/.text-degree`（城市/经验/学历，注意 Boss 源码将 experience 拼成 experiece）、`.tag-container-new > .job-tags span`（福利，需 Set 去重）、`.job-sec-text`（描述）、`.sider-company`（公司多行解析）、`.job-boss-info`（HR 多行解析）；岗位描述分段正则补充「职位要求」关键词；分栏页 HR name 加换行兜底去掉活跃状态文字
-- ✅ Chrome 插件新增前程无忧（51job）适配：`src/content/51job.js` + `51job.css`，manifest 注册 `https://jobs.51job.com/*.html`；选择器：`h1`（职位名）、`.cn`（薪资行，格式 "X-Y万·13薪"）、`.msg.ltype`（城市/经验/学历，`|` 分割）、`[class*=com_name]`（公司名）、`.com_tag`（公司属性多行解析）、`.iname`（HR 姓名）、`.itag`（HR 职称+活跃状态，`·` 分割）、`.bmsg.job_msg`（岗位描述）、`.jtag`（福利）；external_id 从 URL pathname 数字段提取
-
-## Boss 直聘反爬机制速查（Chrome 插件开发必读）
-
-修改插件代码前必须了解这四个坑，否则大概率白调试。
-
-### 1. DevTools 反检测
-
-Boss 监听 DevTools 打开事件，一旦检测到立刻关闭当前页面。  
-**绝对不能**在 Boss 标签页按 F12 或右键→检查。
-
-**绕过方法**：在 content script 里用 `chrome.runtime.sendMessage` 把诊断数据发给 background service worker，在 `chrome://extensions/` → 插件 → Service Worker → 点「检查视图」打开 background 的独立 DevTools Console 查看日志。Boss 感知不到这个 console。
-
-```javascript
-// content script 里发诊断
-chrome.runtime.sendMessage({ type: "jh-diag", data: { ... } });
-
-// service worker 里接收并打印
-chrome.runtime.onMessage.addListener((msg) => {
-  if (msg.type === "jh-diag") console.log("[diag]", msg.data);
-});
-```
-
-### 2. CSS 注入噪声（p.desc）
-
-Boss 在 `p.desc`（岗位描述）里嵌入 `<style>` 标签和 `font-size:0` 的隐藏 span，干扰文字提取。`textContent` 会把这些噪声一起读进来。
-
-**正确做法**：用 `innerText`，浏览器会按 CSS 渲染规则过滤不可见内容：
-
-```javascript
-const raw = descEl.innerText.trim(); // ✅
-// const raw = descEl.textContent;   // ❌ 含噪声
-```
-
-### 3. PUA 字体薪资混淆
-
-Boss 用自定义字体 `kanzhun-Regular` 把薪资数字字符替换为 Unicode 私有区（PUA，U+E000-U+F8FF）字符，字体负责渲染成数字外形。`textContent`/`innerText` 读到的是不可见的 PUA 字符，不是数字。
-
-**诊断方法**：打印字符 code point，看到 U+E0XX 范围即确认。
-
-**错误方向（已验证无效）**：
-- 解析字体 cmap 表找 glyph ID 对应关系 → 该字体 cmap 里只有 PUA 条目，无 ASCII 数字条目，glyph ID 关联法返回 0 个映射
-- Canvas 像素比对 → 参考字形（Arial）和 PUA 字形（kanzhun）形状不同，"1"被误判为"7"
-- 调用 Boss 内部 API 获取真实数字 → **有封号风险，禁止**
-
-**正确方案**：静态算术公式（已由实测数据验证）：
-
-```javascript
-function jhDecodePUADigit(code) {
-  // kanzhun-Regular: U+E031→'0', U+E032→'1', ..., U+E03A→'9'
-  if (code >= 0xE031 && code <= 0xE03A) return String(code - 0xE031);
-  return null;
-}
-```
-
-此映射固化在静态 TTF 文件中（`img.bosszhipin.com/static/file/2022/...ttf`），2022 年起未变动。纯本地计算，零网络请求，无风控风险。
-
-### 4. 安全红线：不能调 Boss 内部 API
-
-`/wapi/zpgeek/` 等 Boss 内部接口会留下服务器日志，可能触发异常行为检测导致封号。
-
-**允许的操作**：读取已渲染的 DOM、本地算术计算、浏览器 Downloads API 导出文件。  
-**禁止的操作**：fetch Boss API、模拟点击投递按钮、读写 cookie/localStorage 中的会话数据。
+- ✅ 排序简化为 match score；输出**只产 shortlist.html**
+- ✅ 全流程自动化：Step 3 fetcher 返回后到 Step 7 之间无文字输出，纯工具调用链
+- ✅ 新增 Step 2.5：简历质量评估（STAR/PAR 法则，新上传简历时触发）
+- ✅ Step 7 生成 shortlist.html（响应式，简历可编辑，一键导出 PDF）
+- ✅ Chrome 插件支持四平台：Boss 直聘、前程无忧、智联招聘、猎聘
+- ✅ FAB 按钮可拖拽，位置持久化，跨平台共享同一位置
