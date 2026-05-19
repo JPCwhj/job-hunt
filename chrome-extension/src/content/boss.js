@@ -153,239 +153,30 @@ async function jhParseBossDetailPage() {
 }
 
 // ── kanzhun 字体 PUA 字符解码（薪资反爬绕过）────────────────────────────────
-// Boss 直聘用 kanzhun-mix 自定义字体把私有区字符（U+E000-U+F8FF）渲染成数字。
-// 解码策略：
-//   ① 解析字体 cmap 表，通过 glyph ID 精确关联 PUA → ASCII 数字（100% 准确）
-//   ② 字体为 WOFF2 或解析失败时，Canvas 像素比对兜底
+// Boss 直聘用 kanzhun-Regular 自定义字体把私有区字符（U+E031-U+E03A）渲染成数字。
+// 字体 cmap 表中只有 PUA 字符条目，无 ASCII '0'-'9' 条目。
+// 通过分析实测数据发现线性映射：digit = codepoint - 0xE031
+//   U+E031 → '0', U+E032 → '1', ..., U+E03A → '9'
+// 此映射编码于静态 TTF 文件（2022 年起未变动），直接算术解码，无需网络请求或 Canvas。
 
-let _jhFontMap = null; // null=未初始化, Map=就绪, false=不可用
-
-// ── ① 字体 cmap 解析 ─────────────────────────────────────────────────────
-
-function jhSendDiag(data) {
-  try { chrome.runtime.sendMessage({ type: "jh-diag", data }); } catch(e) {}
+function jhDecodePUADigit(code) {
+  // kanzhun-Regular 数字 PUA 区：U+E031-U+E03A → '0'-'9'
+  if (code >= 0xE031 && code <= 0xE03A) return String(code - 0xE031);
+  return null; // 未知 PUA 字符
 }
-
-async function jhBuildFontMap() {
-  try {
-    // 1. 从 CSS @font-face 找 kanzhun-mix 字体 URL
-    let fontUrl = null;
-    const allFonts = [];
-    for (const sheet of document.styleSheets) {
-      try {
-        for (const rule of sheet.cssRules) {
-          if (!(rule instanceof CSSFontFaceRule)) continue;
-          const fam = rule.style.fontFamily.replace(/['"]/g, '').trim();
-          allFonts.push(fam);
-          if (!/kanzhun/i.test(fam)) continue;
-          const src = rule.style.getPropertyValue('src');
-          const m = src.match(/url\(["']?([^"')]+)["']?\)/);
-          if (m) { fontUrl = new URL(m[1], location.href).href; break; }
-        }
-      } catch (e) { /* 跨域 sheet 跳过 */ }
-      if (fontUrl) break;
-    }
-    jhSendDiag({ step: "font-search", fontUrl, allFonts: allFonts.slice(0, 20) });
-    if (!fontUrl) return false;
-
-    // 2. 读取字体二进制（通常命中浏览器缓存，无额外网络请求）
-    const buf = await fetch(fontUrl).then(r => r.arrayBuffer());
-    const magic = new DataView(buf).getUint32(0);
-    const magicHex = magic.toString(16).padStart(8, '0');
-    jhSendDiag({ step: "font-magic", magicHex, bufLen: buf.byteLength });
-
-    let cmapBuf;
-    if (magic === 0x00010000 || magic === 0x4F54544F) {
-      cmapBuf = jhGetTTFTable(buf, 'cmap');          // TTF / OTF
-    } else if (magic === 0x774F4646) {
-      cmapBuf = await jhGetWOFF1Table(buf, 'cmap');  // WOFF1 (zlib)
-    } else {
-      jhSendDiag({ step: "font-format", result: "WOFF2-or-unknown, fallback-to-canvas" });
-      return false; // WOFF2 需 Brotli，当前不支持，走 Canvas 兜底
-    }
-    jhSendDiag({ step: "cmap-buf", found: !!cmapBuf, cmapLen: cmapBuf ? cmapBuf.byteLength : 0 });
-    if (!cmapBuf) return false;
-
-    const result = jhExtractPUADigitMap(cmapBuf);
-    if (result) {
-      const entries = [];
-      result.forEach((v, k) => entries.push(`U+${k.toString(16).toUpperCase()}=${v}`));
-      jhSendDiag({ step: "pua-map", count: result.size, entries: entries.slice(0, 30) });
-    } else {
-      jhSendDiag({ step: "pua-map", count: 0, result: "empty" });
-    }
-    return result;
-  } catch (e) {
-    jhSendDiag({ step: "error", msg: String(e) });
-    return false;
-  }
-}
-
-function jhGetTTFTable(buf, tag) {
-  const dv = new DataView(buf);
-  const n = dv.getUint16(4);
-  const t = [tag.charCodeAt(0), tag.charCodeAt(1), tag.charCodeAt(2), tag.charCodeAt(3)];
-  for (let i = 0; i < n; i++) {
-    const b = 12 + i * 16;
-    if (dv.getUint8(b)===t[0] && dv.getUint8(b+1)===t[1] &&
-        dv.getUint8(b+2)===t[2] && dv.getUint8(b+3)===t[3]) {
-      return buf.slice(dv.getUint32(b+8), dv.getUint32(b+8) + dv.getUint32(b+12));
-    }
-  }
-  return null;
-}
-
-async function jhGetWOFF1Table(buf, tag) {
-  const dv = new DataView(buf);
-  const n = dv.getUint16(12);
-  const t = [tag.charCodeAt(0), tag.charCodeAt(1), tag.charCodeAt(2), tag.charCodeAt(3)];
-  for (let i = 0; i < n; i++) {
-    const b = 44 + i * 20;
-    if (dv.getUint8(b)===t[0] && dv.getUint8(b+1)===t[1] &&
-        dv.getUint8(b+2)===t[2] && dv.getUint8(b+3)===t[3]) {
-      const off = dv.getUint32(b+4), cl = dv.getUint32(b+8), ol = dv.getUint32(b+12);
-      const comp = buf.slice(off, off + cl);
-      if (cl === ol) return comp; // 未压缩
-      // zlib deflate 解压
-      const ds = new DecompressionStream('deflate');
-      const w = ds.writable.getWriter(), r = ds.readable.getReader();
-      w.write(new Uint8Array(comp)); w.close();
-      const chunks = [];
-      for (;;) { const {done, value} = await r.read(); if (done) break; chunks.push(value); }
-      const out = new Uint8Array(ol); let p = 0;
-      for (const c of chunks) { out.set(c, p); p += c.length; }
-      return out.buffer;
-    }
-  }
-  return null;
-}
-
-function jhExtractPUADigitMap(cmapBuf) {
-  const dv = new DataView(cmapBuf);
-  const charToGlyph = new Map();
-  const numTables = dv.getUint16(2);
-  for (let i = 0; i < numTables; i++) {
-    const subOff = dv.getUint32(4 + i * 8 + 4);
-    const fmt = dv.getUint16(subOff);
-    if (fmt === 4)       jhCmap4(dv, subOff, charToGlyph);
-    else if (fmt === 12) jhCmap12(dv, subOff, charToGlyph);
-  }
-
-  // ASCII 数字 '0'-'9' → glyph ID
-  const glyphToDigit = new Map();
-  for (let d = 0; d <= 9; d++) {
-    const g = charToGlyph.get(0x30 + d);
-    if (g) glyphToDigit.set(g, String(d));
-  }
-
-  // PUA 字符通过共享 glyph ID 映射到数字
-  const puaMap = new Map();
-  for (const [cp, gid] of charToGlyph) {
-    if (cp >= 0xE000 && cp <= 0xF8FF) {
-      const d = glyphToDigit.get(gid);
-      if (d !== undefined) puaMap.set(cp, d);
-    }
-  }
-  return puaMap.size > 0 ? puaMap : false;
-}
-
-// OpenType cmap format 4（BMP 段映射）
-function jhCmap4(dv, base, out) {
-  const seg = dv.getUint16(base + 6) >> 1;
-  const eb = base + 14, sb = eb + 2 + seg*2, db = sb + seg*2, rb = db + seg*2;
-  for (let i = 0; i < seg; i++) {
-    const end = dv.getUint16(eb + i*2), start = dv.getUint16(sb + i*2);
-    const delta = dv.getInt16(db + i*2), ro = dv.getUint16(rb + i*2);
-    if (start === 0xFFFF) break;
-    for (let c = start; c <= end; c++) {
-      let gid;
-      if (ro === 0) {
-        gid = (c + delta) & 0xFFFF;
-      } else {
-        const raw = dv.getUint16(rb + i*2 + ro + (c - start) * 2);
-        gid = raw !== 0 ? (raw + delta) & 0xFFFF : 0;
-      }
-      if (gid !== 0) out.set(c, gid);
-    }
-  }
-}
-
-// OpenType cmap format 12（全 Unicode 映射）
-function jhCmap12(dv, base, out) {
-  const ng = dv.getUint32(base + 12);
-  for (let i = 0; i < ng; i++) {
-    const g = base + 16 + i * 12;
-    const sc = dv.getUint32(g), ec = dv.getUint32(g+4), sg = dv.getUint32(g+8);
-    for (let c = sc; c <= ec; c++) out.set(c, sg + (c - sc));
-  }
-}
-
-// ── ② Canvas 像素比对（cmap 解析不可用时兜底）────────────────────────────
-
-const _jhCanvasCache = {};
-
-async function jhCanvasDecodeChar(ch) {
-  const code = ch.charCodeAt(0);
-  if (_jhCanvasCache[code] !== undefined) return _jhCanvasCache[code];
-  try {
-    await document.fonts.ready;
-    const W = 32, H = 40;
-    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
-    const ctx = cv.getContext('2d'); ctx.textBaseline = 'alphabetic';
-    const refFont = `20px "kanzhun-mix", Arial, sans-serif`;
-    const refs = {};
-    for (let d = 0; d <= 9; d++) {
-      ctx.clearRect(0,0,W,H); ctx.font = refFont; ctx.fillStyle = '#000';
-      ctx.fillText(String(d), 4, 24);
-      refs[d] = new Uint8ClampedArray(ctx.getImageData(0,0,W,H).data);
-    }
-    ctx.clearRect(0,0,W,H); ctx.font = `20px "kanzhun-mix"`; ctx.fillStyle = '#000';
-    ctx.fillText(ch, 4, 24);
-    const pix = ctx.getImageData(0,0,W,H).data;
-    let best = '?', score = Infinity;
-    for (let d = 0; d <= 9; d++) {
-      let s = 0; const ref = refs[d];
-      for (let i = 3; i < pix.length; i += 4) s += Math.abs(pix[i] - ref[i]);
-      if (s < score) { score = s; best = String(d); }
-    }
-    _jhCanvasCache[code] = best;
-    return best;
-  } catch(e) { return '?'; }
-}
-
-// ── 主解码入口 ────────────────────────────────────────────────────────────
 
 async function jhDecodeSalary(rawText) {
   const chars = Array.from(rawText);
-  const puaChars = chars.filter(c => { const n = c.charCodeAt(0); return n >= 0xE000 && n <= 0xF8FF; });
-  const hasPUA = puaChars.length > 0;
-  jhSendDiag({
-    step: "decode-salary",
-    rawText,
-    charCodes: chars.map(c => c.charCodeAt(0).toString(16)),
-    hasPUA,
-    puaCount: puaChars.length
-  });
+  const hasPUA = chars.some(c => { const n = c.charCodeAt(0); return n >= 0xE000 && n <= 0xF8FF; });
   if (!hasPUA) return rawText;
 
-  if (_jhFontMap === null) _jhFontMap = await jhBuildFontMap();
-
   let result = '';
-  const charLog = [];
   for (const ch of chars) {
     const code = ch.charCodeAt(0);
-    if (code < 0xE000 || code > 0xF8FF) { result += ch; charLog.push({cp: code.toString(16), via: 'pass'}); continue; }
-    if (_jhFontMap && _jhFontMap.has(code)) {
-      const d = _jhFontMap.get(code);
-      result += d;
-      charLog.push({cp: code.toString(16), via: 'cmap', digit: d});
-      continue;
-    }
-    const d = await jhCanvasDecodeChar(ch);
-    result += d;
-    charLog.push({cp: code.toString(16), via: 'canvas', digit: d});
+    if (code < 0xE000 || code > 0xF8FF) { result += ch; continue; }
+    const d = jhDecodePUADigit(code);
+    result += (d !== null) ? d : '?';
   }
-  jhSendDiag({ step: "decode-result", result, charLog });
   return result;
 }
 
