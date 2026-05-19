@@ -14,36 +14,20 @@ HR spends less than 10 seconds scanning a resume — **and how well your resume 
 
 ---
 
-## What It Does
+## What It Does / Doesn't Do
 
-1. **Resume quality check**: Upload your resume and AI diagnoses each section using industry-standard criteria (Situation + Action + Result), highlights weak spots, and suggests improvements. You can revise and re-upload, or skip and continue.
-2. **JD parsing**: Provide job postings (screenshots from any major hiring platform, or batch-collected via the Chrome extension). AI extracts structured data — title, salary, requirements, company size, etc.
-3. **Match analysis**: Aligns each JD with your resume using STAR framework, outputting scores across 4 dimensions: Hard Skills / Experience Depth / Domain Fit / Soft Skills.
-4. **Tailored materials**: Re-focuses your resume for each JD — moves the most relevant experience to the top, sharpens match points, so the HR reading it can immediately see you fit the role. Comes with an opening message + change log.
-5. **Shortlist output**: All positions ranked by match score in a single static HTML file. Open in browser to browse each job's tailored resume / changelog / opener; resume can be edited inline and exported to PDF with one click (Chinese fonts embedded for cross-platform consistency)
+**Does (3 steps, fully automated)**:
 
----
+1. **Evaluate the resume**: diagnoses each section using industry-standard criteria (Situation + Action + Result), flags weak spots, suggests rewrites
+2. **Parse + match**: converts job postings into structured JDs, then aligns them with your resume using STAR across 4 dimensions (hard skills / experience depth / domain fit / soft skills)
+3. **Batch tailor + rank**: rewrites a tailored resume + opener + changelog for each JD, aggregates everything into one HTML ranked by match score
 
-## ⚡ Batch Processing is the Core Capability
+**Doesn't (ethical boundaries)**:
 
-**This isn't "let AI write you a resume" — it's "let AI tailor N resumes simultaneously, one per job."**
-
-| Scenario | Manual Approach | With job-hunt |
-|---|---|---|
-| Apply to 10 jobs | Research each JD, edit resume, write opener — **~1 day** | Send 10 jobs to AI in one go, **all 10 tailored packages done in minutes** |
-| Decide where to apply | Gut feeling | Ranked by match score — **data-driven** |
-| Evaluation criteria | Subjective, fatigue-prone | AI applies the same STAR framework — **consistent** |
-
-However many jobs you send, that's how many tailored resumes you get back — 5, 10, 20, whatever.
-
----
-
-## What It Won't Do
-
-- **No fabricated experience**: Won't add projects, skills, or jobs that aren't already in your resume
-- **No made-up numbers**: Where quantified results are missing, inserts a `[fill in: xxx]` placeholder — never invents user counts, growth rates, or revenue figures
-- **No changes to key facts**: Employment dates, job titles, and company names stay untouched
-- **No hidden edits**: Every change is logged in `changelog.md` — what was changed and why, for your review
+- ❌ No fabricated projects, skills, or work history
+- ❌ No invented numbers (user counts, growth rates, revenue) — uses `[fill in: xxx]` placeholders instead
+- ❌ No changes to employment dates, titles, or company names
+- ✅ Every edit is logged in `changelog.md` for line-by-line review
 
 ---
 
@@ -73,23 +57,55 @@ A ready-to-send HR opening message tailored to the current position (kept within
 
 ---
 
-## Who It's For
+## Who It's For / Who It's Not For
 
 **Best fit**
+
 - Job seekers applying with a text-based resume: product, operations, marketing, engineering, management, etc.
 - Anyone applying to multiple positions who needs to tailor their resume for each JD
 - Anyone who wants a quick read on how well they match a specific role
 
 **Limited benefit**
+
 - Roles where portfolio, design work, or visual output is the primary signal (UI/UX, graphic design, photography, architecture, etc.) — the competitive edge is in the work itself, not the resume text
 
 ---
 
-## Install or Update Skill
+## Prerequisites
+
+- [Claude Code](https://github.com/anthropics/claude-code) installed, or any agent that supports the Skill spec (e.g. Codex, OpenClaw)
+- Resume prepared as a **`.md` file** or **plain text ready to paste** — for PDF/Word, extract the text first
+- Job source — pick either:
+  - **Screenshot mode**: screenshots from any major hiring platform; **requires your AI model to support vision (image recognition)**
+  - **Chrome extension mode**: collect jobs and export `.jobs.json`; no vision capability required (currently supports four major hiring platforms)
+
+---
+
+## Quick Start (30-Second Setup)
+
+```bash
+# 1. Install the skill
+npx skills add JPCwhj/job-hunt -g -y --all
+```
+
+```
+# 2. Run inside Claude Code
+/job-hunt
+
+# 3. Follow the prompts: send resume → send jobs (screenshots or .jobs.json) → wait for results
+```
+
+You'll find the output HTML at `<current directory>/jobHuntSkillData/output/<run_id>/shortlist.html` — open it in a browser.
+
+---
+
+## Install the Skill
 
 ```bash
 npx skills add JPCwhj/job-hunt -g -y --all
 ```
+
+Run the same command again to update to the latest version.
 
 ---
 
@@ -104,6 +120,7 @@ If you'd rather skip screenshots, install the browser extension to bookmark jobs
 5. On any supported platform's job detail page, a "⭐ Add to list" floating button will appear (draggable to any position; the four platforms share the same saved position)
 
 **Usage**:
+
 - On any supported platform's detail page, click "⭐ Add to list" to collect jobs
 - Click the extension icon, select the jobs you want, click "Export"
 - The `.jobs.json` file downloads to your default Downloads folder (exported jobs are automatically cleared from the collection list)
@@ -113,19 +130,10 @@ If you'd rather skip screenshots, install the browser extension to bookmark jobs
 
 ---
 
-## Skill Usage
+## Detailed Workflow
 
-**Option 1**: Launch any skill-compatible agent tool and run the corresponding command:
-- Claude Code: `/job-hunt`
-- Codex: `$job-hunt`
+Run `/job-hunt` in any skill-compatible agent tool (Claude Code, Codex, OpenClaw, etc.):
 
-**Option 2**: In the chat window of a local AI agent tool like OpenClaw, send:
-
-```
-/job-hunt
-```
-
-**Workflow**:
 1. Provide your resume (upload file, give a path, or paste text directly)
 2. AI evaluates resume quality section by section — revise and re-upload, or continue as-is
 3. Provide job postings (either way works):
@@ -149,17 +157,6 @@ If you'd rather skip screenshots, install the browser extension to bookmark jobs
 
 ---
 
-## Prerequisites
-
-- [Claude Code](https://github.com/anthropics/claude-code) installed, or any agent that supports the Skill spec (e.g. Codex, OpenClaw)
-- Resume must be prepared as a **`.md` file** or **plain text ready to paste** — for PDF/Word resumes, open them in a reader, select-all and copy the content, or save as `.md` before sending
-- Job source — pick either:
-  - **Screenshot mode**: screenshots from any major hiring platform; requires your AI model to support vision (image recognition)
-    - 📌 One screenshot = one job; use long screenshot for long postings; each screenshot must contain at least the job title (company name optional)
-  - **Chrome extension mode**: collect jobs and export `.jobs.json`; no vision capability required (see "Install Browser Extension" above)
-
----
-
 ## Output Structure
 
 ```
@@ -179,9 +176,8 @@ If you'd rather skip screenshots, install the browser extension to bookmark jobs
                     └── changelog.md  ← what AI changed (transparency log)
 ```
 
-### Output Format
+`shortlist.html` is a standalone static HTML file:
 
-`shortlist.html`: A standalone static HTML file. Copy the path into your browser to open:
 - Desktop + mobile responsive
 - All jobs ranked by match score
 - Resume can be edited inline; edits auto-saved to browser localStorage
@@ -190,18 +186,10 @@ If you'd rather skip screenshots, install the browser extension to bookmark jobs
 
 ---
 
-## Design Boundaries
+## Design Boundaries & Data Privacy
 
-- **Works with all major hiring platforms**: screenshot mode is platform-agnostic as long as the image contains company name, job title, and JD; the Chrome extension currently supports four major hiring platforms
-- **No auto-apply**: eliminates account ban risk
-- **Two import modes, each with its own fit**:
-  - **Screenshot mode**: zero dependencies — no browser extensions or MCP tools needed, but your AI model must support vision (image recognition)
-  - **Chrome extension mode**: reads the page DOM directly and exports structured JSON, so no vision capability is required; the extension is an optional enhancement, not a requirement
-
----
-
-## Data & Privacy
-
-- **All files stay on your machine**: resume, JDs, and tailored materials are written to your local `jobHuntSkillData/` directory — nothing is auto-uploaded or synced anywhere
-- **Data only passes through the Claude you're already using**: the skill connects to no third-party servers; the data path is identical to using Claude directly
-- **The skill itself is plain text**: no network request code — inspect the source anytime at `~/.claude/skills/`
+- **Supported platforms**: screenshot mode is platform-agnostic; the Chrome extension currently supports four major hiring platforms
+- **No auto-apply**: eliminates account ban risk and respects the ethical boundary — you apply manually
+- **Everything stays local**: resume, JDs, and tailored materials are written to your local `jobHuntSkillData/` directory — nothing is auto-uploaded or synced
+- **Same data path as Claude**: the skill connects to no third-party servers; data flow is identical to using Claude directly
+- **Source is inspectable**: pure-text instructions, no network request code — inspect anytime at `~/.claude/skills/`
