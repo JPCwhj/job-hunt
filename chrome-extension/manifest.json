@@ -7,7 +7,8 @@
   "host_permissions": [
     "https://www.zhipin.com/*",
     "https://jobs.51job.com/*",
-    "https://www.zhaopin.com/*"
+    "https://www.zhaopin.com/*",
+    "https://www.liepin.com/*"
   ],
   "action": {
     "default_popup": "src/popup/popup.html",
@@ -36,6 +37,12 @@
       "matches": ["https://www.zhaopin.com/jobdetail/*"],
       "js": ["src/lib/schema.js", "src/lib/storage.js", "src/content/zhaopin.js"],
       "css": ["src/content/zhaopin.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.liepin.com/job/*.shtml*"],
+      "js": ["src/lib/schema.js", "src/lib/storage.js", "src/content/liepin.js"],
+      "css": ["src/content/liepin.css"],
       "run_at": "document_idle"
     }
   ],

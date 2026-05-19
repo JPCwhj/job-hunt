@@ -1,0 +1,38 @@
+#jh-lp-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 80px;
+  z-index: 999999;
+  padding: 12px 18px;
+  background: #e85d26;
+  color: #fff;
+  border: none;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+#jh-lp-fab:hover  { background: #c94d1e; }
+#jh-lp-fab:active { transform: scale(0.97); }
+#jh-lp-fab.jh-lp-saved { background: #6e7d8f; }
+
+#jh-lp-toast {
+  position: fixed;
+  right: 24px;
+  bottom: 140px;
+  z-index: 999999;
+  padding: 10px 16px;
+  background: rgba(0, 0, 0, 0.78);
+  color: #fff;
+  border-radius: 6px;
+  font-size: 13px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+#jh-lp-toast.jh-lp-show { opacity: 1; }

@@ -1,6 +1,11 @@
 // chrome-extension/src/background/service-worker.js
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
+  if (msg && msg.type === "jh-diag") {
+    console.log("[diag]", JSON.stringify(msg.data, null, 2));
+    return;
+  }
+
 if (msg && msg.type === "jh-export") {
     const { filename, jsonText } = msg;
     // MV3 service worker 中没有 URL.createObjectURL，用 data URL
