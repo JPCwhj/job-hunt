@@ -175,8 +175,13 @@ async function jhZpOnFabClick(btn) {
   } else {
     const job = await jhZpParsePage();
     if (!job.title) { jhZpShowToast("岗位标题未抓到，请刷新后重试"); return; }
-    const count = await jhUpsertJob(job);
-    jhZpShowToast(`已收藏（共 ${count} 个）`);
+    try {
+      const count = await jhUpsertJob(job);
+      jhZpShowToast(`已收藏（共 ${count} 个）`);
+    } catch (e) {
+      jhZpShowToast("收藏失败：存储空间不足，请先导出并清空");
+      return;
+    }
   }
   await jhZpRefreshFabState(btn);
 }
