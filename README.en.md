@@ -17,7 +17,7 @@ HR spends less than 10 seconds scanning a resume — **and how well your resume 
 ## What It Does
 
 1. **Resume quality check**: Upload your resume and AI diagnoses each section using industry-standard criteria (Situation + Action + Result), highlights weak spots, and suggests improvements. You can revise and re-upload, or skip and continue.
-2. **JD parsing**: Upload screenshots of job listing pages from any major hiring platform. AI extracts structured data — title, salary, requirements, company size, etc.
+2. **JD parsing**: Provide job postings (screenshots from any major hiring platform, or batch-collected via the Chrome extension). AI extracts structured data — title, salary, requirements, company size, etc.
 3. **Match analysis**: Aligns each JD with your resume using STAR framework, outputting scores across 4 dimensions: Hard Skills / Experience Depth / Domain Fit / Soft Skills.
 4. **Tailored materials**: Re-focuses your resume for each JD — moves the most relevant experience to the top, sharpens match points, so the HR reading it can immediately see you fit the role. Comes with an opening message + change log.
 5. **Shortlist output**: All positions ranked by match score in a single static HTML file. Open in browser to browse each job's tailored resume / changelog / opener; resume can be edited inline and exported to PDF with one click (Chinese fonts embedded for cross-platform consistency)
@@ -128,9 +128,10 @@ If you'd rather skip screenshots, install the browser extension to bookmark jobs
 **Workflow**:
 1. Provide your resume (upload file, give a path, or paste text directly)
 2. AI evaluates resume quality section by section — revise and re-upload, or continue as-is
-3. Upload job listing screenshots
-   📌 One screenshot = one job (use long screenshot for long postings); each screenshot must include at least the job title (company name optional)
-4. After confirming screenshots, analysis and tailoring run automatically — no extra trigger needed
+3. Provide job postings (either way works):
+   - **Screenshots**: upload screenshots from any major hiring platform (one screenshot = one job; use long screenshot for long postings; each screenshot must include at least the job title)
+   - **Chrome extension**: batch-collect jobs, export `.jobs.json`, send the file to AI
+4. Once jobs are imported, analysis and tailoring run automatically — no extra trigger needed
 5. Review shortlist, fill in placeholders, apply manually
 
 **Re-run with a new resume**: Run `/job-hunt` again and it will prompt you to send your updated resume. Send it directly to replace the cached version — no need to clean first. A new resume automatically triggers the quality assessment with section-by-section feedback.
@@ -140,7 +141,7 @@ If you'd rather skip screenshots, install the browser extension to bookmark jobs
 | Command | Description |
 |---|---|
 | `/job-hunt` | Full flow (import → analyze → tailor → shortlist) |
-| `/job-hunt fetch` | Import screenshots only (parse JDs into jd-pool) |
+| `/job-hunt fetch` | Import jobs only (screenshots or extension JSON) |
 | `/job-hunt analyze` | Run match analysis on existing jd-pool |
 | `/job-hunt tailor` | Sort + generate tailored materials |
 | `/job-hunt status` | Check current run progress |
@@ -150,11 +151,12 @@ If you'd rather skip screenshots, install the browser extension to bookmark jobs
 
 ## Prerequisites
 
-- **Your AI model must support vision (image recognition)** (for screenshot parsing)
 - [Claude Code](https://github.com/anthropics/claude-code) installed, or any agent that supports the Skill spec (e.g. Codex, OpenClaw)
 - Resume must be prepared as a **`.md` file** or **plain text ready to paste** — for PDF/Word resumes, open them in a reader, select-all and copy the content, or save as `.md` before sending
-- Any major hiring platform — just screenshot the job detail page
-- 📌 **Screenshot rule: one screenshot = one job**. Use long screenshot to capture the full posting in one image; each screenshot must contain at least the job title (company name optional)
+- Job source — pick either:
+  - **Screenshot mode**: screenshots from any major hiring platform; requires your AI model to support vision (image recognition)
+    - 📌 One screenshot = one job; use long screenshot for long postings; each screenshot must contain at least the job title (company name optional)
+  - **Chrome extension mode**: collect jobs and export `.jobs.json`; no vision capability required (see "Install Browser Extension" above)
 
 ---
 
@@ -190,7 +192,7 @@ If you'd rather skip screenshots, install the browser extension to bookmark jobs
 
 ## Design Boundaries
 
-- **Works with all major hiring platforms**: any screenshot containing company name, job title, and JD is sufficient
+- **Works with all major hiring platforms**: screenshot mode is platform-agnostic as long as the image contains company name, job title, and JD; the Chrome extension currently supports four major hiring platforms
 - **No auto-apply**: eliminates account ban risk
 - **Two import modes, each with its own fit**:
   - **Screenshot mode**: zero dependencies — no browser extensions or MCP tools needed, but your AI model must support vision (image recognition)
