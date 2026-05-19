@@ -62,7 +62,7 @@ function jhExtractExternalId() {
   return null;
 }
 
-function jhParseBossDetailPage() {
+async function jhParseBossDetailPage() {
   const job = jhEmptyJob();
   job.platform = "boss";
   job.saved_at = new Date().toISOString();
@@ -76,8 +76,10 @@ function jhParseBossDetailPage() {
   job.url = (detailLink && detailLink.href) || location.href;
 
   // ── 标题 & 薪资 ─────────────────────────────────────────────────────────
-  job.title = txt(".job-name", root);
-  const salaryText = txt(".job-salary", root);
+  // Boss 薪资用 kanzhun-mix 字体做 PUA 字符混淆，需 Canvas 解码
+  job.title = innerTxt(".job-name", root);
+  const salaryRaw = innerTxt(".job-salary", root);
+  const salaryText = salaryRaw ? await jhDecodeSalary(salaryRaw) : null;
   job.salary.range = salaryText;
   if (salaryText) {
     const mc = salaryText.match(/(\d+)薪/);
@@ -150,9 +152,63 @@ function jhParseBossDetailPage() {
   return job;
 }
 
-globalThis.jhParseBossDetailPage = jhParseBossDetailPage;
-globalThis.jhExtractExternalId = jhExtractExternalId;
-globalThis.jhFindRightPanel = jhFindRightPanel;
+// ── kanzhun 字体 PUA 字符解码（薪资反爬绕过）────────────────────────────
+// Boss 直聘用 kanzhun-mix 字体把私有区字符（U+E000-U+F8FF）渲染成数字；
+// 用 Canvas 把 PUA 字符用 kanzhun-mix 渲染后与 Arial 渲染的 0-9 做像素对比。
+const _jhDigitCache = {}; // 缓存本次页面生命周期内已解码的 PUA→digit 映射
+
+async function jhDecodeSalary(rawText) {
+  const chars = Array.from(rawText);
+  const hasPUA = chars.some(c => { const n = c.charCodeAt(0); return n >= 0xE000 && n <= 0xF8FF; });
+  if (!hasPUA) return rawText;
+
+  try {
+    await document.fonts.ready; // 确保 kanzhun-mix 已加载
+
+    const W = 28, H = 32;
+    const canvas = document.createElement("canvas");
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext("2d");
+    ctx.textBaseline = "alphabetic";
+
+    // 用 Arial 构建 0-9 参考像素指纹（Alpha 通道）
+    ctx.font = `18px Arial, sans-serif`;
+    const refs = {};
+    for (let d = 0; d <= 9; d++) {
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = "#000";
+      ctx.fillText(String(d), 4, 22);
+      refs[d] = new Uint8ClampedArray(ctx.getImageData(0, 0, W, H).data);
+    }
+
+    // 解码每个 PUA 字符
+    let result = "";
+    for (const ch of chars) {
+      const code = ch.charCodeAt(0);
+      if (code < 0xE000 || code > 0xF8FF) { result += ch; continue; }
+      if (_jhDigitCache[code] !== undefined) { result += _jhDigitCache[code]; continue; }
+
+      ctx.font = `18px "kanzhun-mix"`;
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = "#000";
+      ctx.fillText(ch, 4, 22);
+      const puaAlpha = ctx.getImageData(0, 0, W, H).data;
+
+      let best = "?", bestScore = Infinity;
+      for (let d = 0; d <= 9; d++) {
+        let score = 0;
+        const ref = refs[d];
+        for (let i = 3; i < puaAlpha.length; i += 4) score += Math.abs(puaAlpha[i] - ref[i]);
+        if (score < bestScore) { bestScore = score; best = String(d); }
+      }
+      _jhDigitCache[code] = best;
+      result += best;
+    }
+    return result;
+  } catch (e) {
+    return rawText; // 解码失败时保留原始文本（含不可见 PUA 字符）
+  }
+}
 
 
 // 追加到 boss.js 末尾。所有 DOM 用 createElement + textContent，禁用 innerHTML
@@ -195,7 +251,7 @@ async function jhOnFabClick(btn) {
     await jhRemoveJob(id);
     jhShowToast("已从清单移除");
   } else {
-    const job = jhParseBossDetailPage();
+    const job = await jhParseBossDetailPage();
     if (!job.title) { jhShowToast("岗位标题未抓到，请刷新页面后重试"); return; }
     const count = await jhUpsertJob(job);
     jhShowToast(`已收藏（共 ${count} 个）`);
