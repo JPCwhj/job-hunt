@@ -4,7 +4,7 @@
   bottom: 80px;
   z-index: 999999;
   padding: 12px 18px;
-  background: #e85d26;
+  background: #00b38a;
   color: #fff;
   border: none;
   border-radius: 24px;
@@ -17,7 +17,7 @@
   align-items: center;
   gap: 6px;
 }
-#jh-lp-fab:hover  { background: #c94d1e; }
+#jh-lp-fab:hover  { background: #009974; }
 #jh-lp-fab:active { transform: scale(0.97); }
 #jh-lp-fab.jh-lp-saved { background: #6e7d8f; }
 
