@@ -195,8 +195,9 @@ async function jhParseSplitPaneLayout(job) {
     if (dm) job.location.district = dm[0];
   }
 
-  // 福利标签 & 岗位标签
-  job.benefits = txtAll(".job-label-list li", root);
+  // 福利标签：分栏模式下无可靠选择器，置空（detail 页面可正确抓取）
+  // .job-label-list li 实际抓到的是技能/岗位标签，不是福利，故清空
+  job.benefits = [];
   job.tags = tagItems;
 
   // 岗位描述：innerText 过滤 Boss 注入的 CSS 噪声（p.desc 里有隐藏 span）
@@ -221,6 +222,14 @@ async function jhParseSplitPaneLayout(job) {
     const parts = bossAttr.split(/\s*[·・]\s*/);
     job.company.name = parts[0] ? parts[0].trim() : null;
     job.hr.title    = parts[1] ? parts[1].trim() : null;
+  }
+
+  // 公司 industry / size / stage：分栏模式下可能在 .company-tag-box 或 .job-company-desc
+  const companyTags = txtAll(".company-tag-box span, .company-tag-box li, .job-company-desc .tag-item", root);
+  for (const t of companyTags) {
+    if (/已上市|未上市|天使轮|Pre-[AB]|[A-Z]轮|上市公司|不需要融资/.test(t)) job.company.stage = t;
+    else if (/人以上|人$|\d+-\d+人/.test(t)) job.company.size = t;
+    else if (!job.company.industry) job.company.industry = t;
   }
 
   // HR 姓名：h2.name 含「姓名 活跃状态」，去掉后半段
