@@ -89,10 +89,10 @@ async function jhParseDetailLayout(job) {
   job.title = innerTxt(".info-primary .name h1") || innerTxt("h1");
   const salaryRaw = innerTxt(".info-primary .name .salary");
   const salaryText = salaryRaw ? await jhDecodeSalary(salaryRaw) : null;
-  job.salary.range = salaryText;
   if (salaryText) {
     const mc = salaryText.match(/(\d+)薪/);
     if (mc) job.salary.monthly_count = parseInt(mc[1]);
+    job.salary.range = salaryText.replace(/\s*.\s*\d+薪$/, "").trim() || salaryText;
   }
 
   // 城市 / 经验 / 学历（.info-primary p 里三个独立 span/a）
@@ -170,10 +170,10 @@ async function jhParseSplitPaneLayout(job) {
   job.title = innerTxt(".job-name", root);
   const salaryRaw = innerTxt(".job-salary", root);
   const salaryText = salaryRaw ? await jhDecodeSalary(salaryRaw) : null;
-  job.salary.range = salaryText;
   if (salaryText) {
     const mc = salaryText.match(/(\d+)薪/);
     if (mc) job.salary.monthly_count = parseInt(mc[1]);
+    job.salary.range = salaryText.replace(/\s*.\s*\d+薪$/, "").trim() || salaryText;
   }
 
   // 城市 / 经验 / 学历：从 tag-list li 逐项识别

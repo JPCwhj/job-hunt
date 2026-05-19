@@ -42,15 +42,24 @@ async function jhZpParsePage() {
       job.salary.range = salaryLine;
     }
 
-    // line[1] = "杭州 钱塘区" → city + district（空格分隔）
-    if (lines[1]) {
-      const parts = lines[1].split(/\s+/);
-      job.location.city     = parts[0] || null;
-      job.location.district = parts[1] || null;
+    // 其余行按内容识别，避免城市/区域分行时导致字段错位
+    for (const line of lines.slice(1)) {
+      if (/年以上|年经验|应届|不限经验|\d+-\d+年/.test(line)) {
+        if (!job.requirements.experience) job.requirements.experience = line;
+      } else if (/本科|大专|硕士|博士|高中|中专|不限/.test(line)) {
+        if (!job.requirements.education) job.requirements.education = line;
+      } else if (!job.requirements.experience && !job.requirements.education) {
+        // 尚未遇到经验/学历行，当前行属于地点信息
+        if (!job.location.city) {
+          const parts = line.split(/\s+/);
+          job.location.city     = parts[0] || null;
+          job.location.district = parts[1] || null;
+        } else if (!job.location.district) {
+          // 城市和区域分两行的情况
+          job.location.district = line;
+        }
+      }
     }
-    // line[2] = 经验，line[3] = 学历
-    if (lines[2]) job.requirements.experience = lines[2];
-    if (lines[3]) job.requirements.education  = lines[3];
   }
 
   // 公司信息：.company-info__meta

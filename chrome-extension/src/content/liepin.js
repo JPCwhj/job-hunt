@@ -77,9 +77,14 @@ async function jhLpParsePage() {
     }
     if (lines[1]) {
       // "人力行政总监 · 诚泰租赁" → HR职称取"·"前，公司名取"·"后
+      // 若无"·"，整行视为公司名（部分职位只展示公司名，无职称）
       const dotParts = lines[1].split("·").map(s => s.trim());
-      job.hr.title    = dotParts[0] || null;
-      job.company.name = dotParts[1] || null;
+      if (dotParts.length >= 2) {
+        job.hr.title     = dotParts[0] || null;
+        job.company.name = dotParts[1] || null;
+      } else {
+        job.company.name = lines[1] || null;
+      }
     }
   }
 
