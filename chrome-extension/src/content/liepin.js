@@ -137,36 +137,19 @@ async function jhLpParsePage() {
     }
   }
 
-  // ── 临时诊断：在 MAIN 里找公司属性 ──
-  (function diagComp2() {
-    // MAIN 元素是 .job-apply-container 的兄弟节点（无 class 的 MAIN tag）
-    const mainEl = document.querySelector("main") ||
-                   Array.from(document.querySelectorAll(".job-apply-container ~ *"))
-                     .find(el => el.tagName === "MAIN");
-    const children = mainEl
-      ? Array.from(mainEl.children).map(el => ({
-          cls: el.className?.toString().slice(0, 60),
-          tag: el.tagName,
-          txt: (el.innerText || "").trim().slice(0, 120)
-        }))
-      : [];
-
-    // 也找 .recruiter-container 的兄弟节点
-    const recruiterEl = document.querySelector(".recruiter-container");
-    const recruiterSiblings = recruiterEl
-      ? Array.from(recruiterEl.parentElement?.children || []).map(el => ({
-          cls: el.className?.toString().slice(0, 60),
-          tag: el.tagName,
-          txt: (el.innerText || "").trim().slice(0, 120)
-        }))
-      : [];
-
-    chrome.runtime.sendMessage({ type: "jh-diag", data: {
-      mainChildren: children,
-      recruiterSiblings,
-    }});
-  })();
-  // ── 诊断结束 ──
+  // 公司属性（industry/size/stage）：页面右侧 ASIDE 面板
+  // 格式："企业行业： 基金/证券/期货\n人数规模： 500-999人\n融资情况： 已上市\n..."
+  const asideEl = document.querySelector("aside");
+  if (asideEl) {
+    const asideTxt = (asideEl.innerText || "");
+    const matchLabel = (label) => {
+      const m = asideTxt.match(new RegExp(label + "\\s*[：:]\\s*([^\\n]+)"));
+      return m ? m[1].trim() : null;
+    };
+    job.company.industry = matchLabel("企业行业");
+    job.company.size     = matchLabel("人数规模");
+    job.company.stage    = matchLabel("融资情况") || matchLabel("融资阶段");
+  }
 
   return job;
 }
