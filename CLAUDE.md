@@ -126,3 +126,66 @@ Claude Code 的运行模型：
 - ✅ Step 7 新增 HTML 输出：生成 shortlist.html（静态单文件，内嵌思源黑体+marked+html2pdf），左列表+右详情响应式布局，简历可编辑+localStorage 持久化，每岗位一键导出 PDF；保留所有原 MD 输出
 - ✅ 新增 Chrome 浏览器插件（仅 Boss 直聘）：详情页悬浮按钮 + 图标 popup 清单 → 导出 .jobs.json 到 Downloads；主 skill Step 3 新增 .jobs.json 识别分支，调 import_jobs.py 直接写入 jd-pool（跳过 OCR）；目录扫描分支同步支持图片 + .jobs.json 混合处理；插件源码在 `chrome-extension/` 目录，开发者模式加载安装；插件只读 DOM，不调 Boss API、不模拟点击、不存 cookie；所有 DOM 操作用 createElement + textContent，禁用 innerHTML
 - ✅ Chrome 插件 DOM 选择器全面修正（基于实机诊断）：使用 background service worker console 绕开 Boss 反 DevTools 检测，找到真实 class names；修正 tag-list li（城市/经验/学历）、p.desc+innerText（岗位描述，过滤 CSS 注入噪声）、boss-info-attr（公司名+HR职位）、boss-active-time（HR活跃状态）、job-label-list li（标签）等核心选择器；三个岗位实测验证通过
+- ✅ Chrome 插件薪资解码修正：Boss 用 kanzhun-Regular 字体将薪资数字替换为 PUA 字符（U+E000-U+F8FF），cmap 表只含 PUA 条目、不含 ASCII '0'-'9'，glyph ID 关联法无效；实测发现线性映射 `digit = codepoint - 0xE031`（U+E031→0 … U+E03A→9），改用算术解码，无网络请求，无风控风险
+
+## Boss 直聘反爬机制速查（Chrome 插件开发必读）
+
+修改插件代码前必须了解这四个坑，否则大概率白调试。
+
+### 1. DevTools 反检测
+
+Boss 监听 DevTools 打开事件，一旦检测到立刻关闭当前页面。  
+**绝对不能**在 Boss 标签页按 F12 或右键→检查。
+
+**绕过方法**：在 content script 里用 `chrome.runtime.sendMessage` 把诊断数据发给 background service worker，在 `chrome://extensions/` → 插件 → Service Worker → 点「检查视图」打开 background 的独立 DevTools Console 查看日志。Boss 感知不到这个 console。
+
+```javascript
+// content script 里发诊断
+chrome.runtime.sendMessage({ type: "jh-diag", data: { ... } });
+
+// service worker 里接收并打印
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.type === "jh-diag") console.log("[diag]", msg.data);
+});
+```
+
+### 2. CSS 注入噪声（p.desc）
+
+Boss 在 `p.desc`（岗位描述）里嵌入 `<style>` 标签和 `font-size:0` 的隐藏 span，干扰文字提取。`textContent` 会把这些噪声一起读进来。
+
+**正确做法**：用 `innerText`，浏览器会按 CSS 渲染规则过滤不可见内容：
+
+```javascript
+const raw = descEl.innerText.trim(); // ✅
+// const raw = descEl.textContent;   // ❌ 含噪声
+```
+
+### 3. PUA 字体薪资混淆
+
+Boss 用自定义字体 `kanzhun-Regular` 把薪资数字字符替换为 Unicode 私有区（PUA，U+E000-U+F8FF）字符，字体负责渲染成数字外形。`textContent`/`innerText` 读到的是不可见的 PUA 字符，不是数字。
+
+**诊断方法**：打印字符 code point，看到 U+E0XX 范围即确认。
+
+**错误方向（已验证无效）**：
+- 解析字体 cmap 表找 glyph ID 对应关系 → 该字体 cmap 里只有 PUA 条目，无 ASCII 数字条目，glyph ID 关联法返回 0 个映射
+- Canvas 像素比对 → 参考字形（Arial）和 PUA 字形（kanzhun）形状不同，"1"被误判为"7"
+- 调用 Boss 内部 API 获取真实数字 → **有封号风险，禁止**
+
+**正确方案**：静态算术公式（已由实测数据验证）：
+
+```javascript
+function jhDecodePUADigit(code) {
+  // kanzhun-Regular: U+E031→'0', U+E032→'1', ..., U+E03A→'9'
+  if (code >= 0xE031 && code <= 0xE03A) return String(code - 0xE031);
+  return null;
+}
+```
+
+此映射固化在静态 TTF 文件中（`img.bosszhipin.com/static/file/2022/...ttf`），2022 年起未变动。纯本地计算，零网络请求，无风控风险。
+
+### 4. 安全红线：不能调 Boss 内部 API
+
+`/wapi/zpgeek/` 等 Boss 内部接口会留下服务器日志，可能触发异常行为检测导致封号。
+
+**允许的操作**：读取已渲染的 DOM、本地算术计算、浏览器 Downloads API 导出文件。  
+**禁止的操作**：fetch Boss API、模拟点击投递按钮、读写 cookie/localStorage 中的会话数据。
