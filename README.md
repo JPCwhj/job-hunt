@@ -111,10 +111,14 @@ npx skills add JPCwhj/job-hunt -g -y --all
 
 如果不想截图，可以装一个浏览器插件直接收藏岗位再批量导出。**已支持 Boss 直聘、前程无忧、智联招聘、猎聘四个平台**。
 
-1. 克隆本仓库：`git clone https://github.com/JPCwhj/job-hunt.git`
+1. 获取仓库代码（任选一种方式）：
+   - 克隆：`git clone https://github.com/JPCwhj/job-hunt.git`
+   - 或点本仓库右上角绿色 **Code → Download ZIP** 下载压缩包，解压到任意位置
 2. 打开 Chrome，访问 `chrome://extensions/`
 3. 右上角打开"开发者模式"
-4. 点"加载已解压的扩展程序"，选择仓库下的 `chrome-extension/` 目录
+4. 加载插件（任选一种方式）：
+   - 点"加载已解压的扩展程序"，选择仓库下的 `chrome-extension/` 目录
+   - 或直接把 `chrome-extension/` 文件夹拖进 `chrome://extensions/` 页面
 5. 安装成功后，在任意支持平台的岗位详情页右下角会出现"⭐ 加入清单"按钮（按钮可拖拽到任意位置，四个平台共享同一位置）
 
 **使用流程**：

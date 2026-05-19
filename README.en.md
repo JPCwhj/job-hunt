@@ -111,10 +111,14 @@ npx skills add JPCwhj/job-hunt -g -y --all
 
 If you'd rather skip screenshots, install the browser extension to bookmark jobs and batch-export them. **Currently supports four major hiring platforms.**
 
-1. Clone the repo: `git clone https://github.com/JPCwhj/job-hunt.git`
+1. Get the repo (either way):
+   - Clone: `git clone https://github.com/JPCwhj/job-hunt.git`
+   - Or click the green **Code → Download ZIP** button on the repo page and unzip anywhere
 2. Open Chrome → `chrome://extensions/`
 3. Enable "Developer mode" (top right)
-4. Click "Load unpacked", select the `chrome-extension/` folder in the repo
+4. Load the extension (either way):
+   - Click "Load unpacked" and select the `chrome-extension/` folder in the repo
+   - Or drag the `chrome-extension/` folder directly into the `chrome://extensions/` page
 5. On any supported platform's job detail page, a "⭐ Add to list" floating button will appear (draggable to any position; the four platforms share the same saved position)
 
 **Usage**:
