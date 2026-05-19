@@ -137,28 +137,33 @@ async function jhLpParsePage() {
     }
   }
 
-  // ── 临时诊断：找公司 industry/stage/size ──
-  (function diagComp() {
-    function snap(sel) {
-      const el = document.querySelector(sel);
-      return el ? (el.innerText||"").trim().slice(0,100) : null;
-    }
-    // 从 .content 出发，找同级或父级的公司属性容器
-    const contentEl = document.querySelector(".content");
-    const contentParent = contentEl?.parentElement;
-    const siblings = contentParent
-      ? Array.from(contentParent.children)
-          .map(el => ({ cls: el.className?.toString().slice(0,60), txt: (el.innerText||"").trim().slice(0,80) }))
-          .filter(x => x.txt)
+  // ── 临时诊断：在 MAIN 里找公司属性 ──
+  (function diagComp2() {
+    // MAIN 元素是 .job-apply-container 的兄弟节点（无 class 的 MAIN tag）
+    const mainEl = document.querySelector("main") ||
+                   Array.from(document.querySelectorAll(".job-apply-container ~ *"))
+                     .find(el => el.tagName === "MAIN");
+    const children = mainEl
+      ? Array.from(mainEl.children).map(el => ({
+          cls: el.className?.toString().slice(0, 60),
+          tag: el.tagName,
+          txt: (el.innerText || "").trim().slice(0, 120)
+        }))
       : [];
+
+    // 也找 .recruiter-container 的兄弟节点
+    const recruiterEl = document.querySelector(".recruiter-container");
+    const recruiterSiblings = recruiterEl
+      ? Array.from(recruiterEl.parentElement?.children || []).map(el => ({
+          cls: el.className?.toString().slice(0, 60),
+          tag: el.tagName,
+          txt: (el.innerText || "").trim().slice(0, 120)
+        }))
+      : [];
+
     chrome.runtime.sendMessage({ type: "jh-diag", data: {
-      contentParentClass: contentParent?.className?.toString(),
-      siblings,
-      compTagAll: Array.from(document.querySelectorAll("[class*='comp-tag'],[class*='company-tag'],[class*='ent-tag']"))
-        .map(el => ({ cls: el.className?.toString().slice(0,50), txt: (el.innerText||"").trim().slice(0,60) }))
-        .filter(x => x.txt),
-      jobCompanyInfo: snap(".job-company-info-box"),
-      companyBasic: snap("[class*='company-basic']") || snap("[class*='ent-basic']"),
+      mainChildren: children,
+      recruiterSiblings,
     }});
   })();
   // ── 诊断结束 ──
