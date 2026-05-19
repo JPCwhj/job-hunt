@@ -10,7 +10,7 @@ HR spends less than 10 seconds scanning a resume — **and how well your resume 
 
 **job-hunt is an AI skill that lives inside your agent** (Claude Code, Codex, OpenClaw, etc.): send it your resume and a batch of jobs, and it runs «parse → match → tailor resume → write opener» on each JD automatically, then produces a single HTML report ranked by match score. Whether it's 5, 10, or 20 jobs at once — it handles them all in one go.
 
-> You decide who to apply to. AI gets every application ready.
+> You decide who to apply to. AI gets every resume ready.
 
 ---
 
