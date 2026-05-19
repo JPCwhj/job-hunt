@@ -102,30 +102,38 @@ async function jhLpParsePage() {
     const fullText = (introEl.innerText || "").trim()
       .replace(/^职位介绍\s*/i, "");  // 去掉顶部标题
 
+    function stripTrailingNoise(text) {
+      // 去掉末尾的"其他信息 行业要求：..."等猎聘页脚噪声
+      return text.replace(/\n*其他信息[\s\S]*$/i, "").trim();
+    }
     function cleanDesc(text) {
-      return text
-        .replace(/^(职责描述|岗位职责|职位描述|工作职责)\s*[：:\s]*/i, "")
-        .replace(/\s*【\s*$/, "")
-        .trim();
+      return stripTrailingNoise(
+        text
+          .replace(/^(职责描述|岗位职责|职位描述|工作职责)\s*[：:\s]*/i, "")
+          .replace(/\s*【\s*$/, "")
+          .trim()
+      );
     }
     function cleanReqs(text) {
-      return text
-        .replace(/^(任职要求|任职资格|岗位要求|职位要求)\s*[：:]\s*/i, "")
-        .replace(/^[】\s：:]+/, "")
-        .trim();
+      return stripTrailingNoise(
+        text
+          .replace(/^(任职要求|任职资格|岗位要求|职位要求)\s*[：:]\s*/i, "")
+          .replace(/^[】\s：:]+/, "")
+          .trim()
+      );
     }
 
-    // 按行找第一个以"任职要求/任职资格/岗位要求/职位要求"开头的行（避免匹配正文中间）
+    // 按行找第一个以中文/英文要求关键词开头的行（避免匹配正文中间）
     const lines = fullText.split("\n");
     const splitIdx = lines.findIndex(l =>
-      /^(任职要求|任职资格|岗位要求|职位要求)\s*[：:]?/.test(l.trim())
+      /^(任职要求|任职资格|岗位要求|职位要求|Requirements)\s*[：:.]?/i.test(l.trim())
     );
 
     if (splitIdx > -1) {
       job.job_description  = cleanDesc(lines.slice(0, splitIdx).join("\n"));
       job.job_requirements = cleanReqs(lines.slice(splitIdx).join("\n"));
     } else {
-      job.job_description = cleanDesc(fullText);
+      job.job_description = stripTrailingNoise(cleanDesc(fullText));
     }
   }
 
