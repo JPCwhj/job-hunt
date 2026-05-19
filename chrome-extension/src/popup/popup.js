@@ -121,7 +121,11 @@ function onExportClick() {
       const btn = document.getElementById("jh-export");
       if (resp && resp.ok) {
         btn.textContent = `✅ 已导出 ${payload.jobs.length} 个，查看 Downloads`;
-        setTimeout(updateExportButton, 2500);
+        // 导出成功后自动移除已导出的岗位
+        for (const key of state.selected) await jhRemoveJob(key);
+        state.jobs = await jhLoadJobs();
+        state.selected.clear();
+        setTimeout(() => { render(); }, 2500);
       } else {
         const errMsg = (resp && resp.error) || (lastErr && lastErr.message) || "未知错误";
         btn.textContent = `❌ 导出失败：${errMsg}`;
