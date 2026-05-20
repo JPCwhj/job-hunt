@@ -160,7 +160,7 @@ function jhZpSetFabContent(btn, icon, label, saved) {
 async function jhZpRefreshFabState(btn) {
   const id = jhZpExtractExternalId();
   if (!id) return;
-  const saved = await jhHasJob(id);
+  const saved = await jhHasJob("zhaopin:" + id);
   if (saved) jhZpSetFabContent(btn, "✅", "已收藏（点击取消）", true);
   else jhZpSetFabContent(btn, "⭐", "加入清单", false);
 }
@@ -168,9 +168,9 @@ async function jhZpRefreshFabState(btn) {
 async function jhZpOnFabClick(btn) {
   const id = jhZpExtractExternalId();
   if (!id) { jhZpShowToast("未能识别岗位 ID"); return; }
-  const saved = await jhHasJob(id);
+  const saved = await jhHasJob("zhaopin:" + id);
   if (saved) {
-    await jhRemoveJob(id);
+    await jhRemoveJob("zhaopin:" + id);
     jhZpShowToast("已从清单移除");
   } else {
     const job = await jhZpParsePage();

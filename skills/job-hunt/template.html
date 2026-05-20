@@ -159,6 +159,28 @@
     .score-item .sval.missing { color: #cbd5e1; font-weight: 400; }
     .score-item .slabel { font-size: 10px; color: #94a3b8; margin-top: 2px; }
 
+    /* 维度说明 tooltip（hover + 点击双触发，兼容手机） */
+    .score-item, .score-hero { position: relative; cursor: pointer; }
+    .score-tip {
+      position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+      width: max-content; max-width: min(260px, 80vw);
+      background: #1e293b; color: #e2e8f0; text-align: left;
+      font-size: 12px; line-height: 1.55; font-weight: 400;
+      padding: 10px 12px; border-radius: 8px; box-shadow: 0 8px 24px rgba(15,23,42,.22);
+      opacity: 0; visibility: hidden; transition: opacity .15s ease; z-index: 60;
+      pointer-events: none;
+    }
+    .score-tip .tip-t { display: block; color: #fff; font-weight: 600; margin-bottom: 5px; }
+    .score-tip .tip-h { display: block; color: #94a3b8; }
+    @media (hover: hover) {
+      .score-item:hover .score-tip, .score-hero:hover .score-tip { opacity: 1; visibility: visible; }
+    }
+    .score-item.tip-open .score-tip, .score-hero.tip-open .score-tip { opacity: 1; visibility: visible; }
+    /* 边缘对齐，防止 tooltip 溢出屏幕 */
+    .score-breakdown .score-item:first-child .score-tip { left: 0; transform: none; }
+    .score-breakdown .score-item:last-child .score-tip { left: auto; right: 0; transform: none; }
+    .score-hero .score-tip { left: auto; right: 0; transform: none; }
+
     .one-liner {
       margin-top: 14px; padding: 11px 16px;
       background: #f8fafc; border-left: 3px solid #3b82f6; border-radius: 0 6px 6px 0;
@@ -493,16 +515,21 @@
 
       // 分项分数
       const subScores = [
-        { key: 'hard_skills',       label: '硬技能' },
-        { key: 'experience_depth',  label: '经验深度' },
-        { key: 'domain_fit',        label: '行业契合' },
-        { key: 'soft_fit',          label: '软性匹配' },
+        { key: 'hard_skills',      label: '硬技能',
+          tip: ['你会的技能/工具，和 JD 要求对得上多少。', '算法：JD 要求的技能里你命中的比例越高分越高，命中加分项再额外加分。'] },
+        { key: 'experience_depth', label: '经验深度',
+          tip: ['你的工作年限和项目复杂度，够不够 JD 的要求。', '算法：拿你的实际年限和 JD 要求年限比，差距越小分越高；项目复杂度相近会微调。'] },
+        { key: 'domain_fit',       label: '行业契合',
+          tip: ['你的行业背景，和这个岗位所在的行业/业务场景搭不搭。', '算法：同行业同场景最高；行业不同但技能能迁移居中；几乎不相关最低。'] },
+        { key: 'soft_fit',         label: '软性匹配',
+          tip: ['JD 的软性要求（沟通、0-1 经验、跨团队推动等），你简历里有没有具体事例撑。', '算法：每个有真实事例支撑的软要求加分；学历、证书等加分项再额外加。'] },
       ];
       const scoreItemsHtml = subScores.map(s => {
         const v = safeScore(scores[s.key]);
-        return `<div class="score-item">
+        return `<div class="score-item" tabindex="0" role="button" aria-label="${s.label}说明">
           <div class="sval${v === '—' ? ' missing' : ''}">${v}</div>
           <div class="slabel">${s.label}</div>
+          <div class="score-tip"><span class="tip-t">${s.tip[0]}</span><span class="tip-h">${s.tip[1]}</span></div>
         </div>`;
       }).join('');
 
@@ -522,9 +549,10 @@
                 ${salaryHtml}
               </div>
             </div>
-            <div class="score-hero">
+            <div class="score-hero" tabindex="0" role="button" aria-label="总匹配度说明">
               <div class="score-main">${safeScore(job.match_score)}</div>
               <div class="score-tag">匹配度</div>
+              <div class="score-tip"><span class="tip-t">总匹配度</span><span class="tip-h">四个维度等权重平均（硬技能、经验深度、行业契合、软性匹配各占 25%）。</span></div>
             </div>
           </div>
           <div class="score-breakdown">${scoreItemsHtml}</div>
@@ -671,6 +699,14 @@
     // === 移动端返回 ===
     document.getElementById('mobile-back').addEventListener('click', () => {
       document.querySelector('.app').dataset.view = 'list';
+    });
+
+    // === 维度说明 tooltip：点击切换（手机端可用），点别处自动关闭 ===
+    document.addEventListener('click', (e) => {
+      const box = e.target.closest('.score-item, .score-hero');
+      document.querySelectorAll('.score-item.tip-open, .score-hero.tip-open')
+        .forEach(el => { if (el !== box) el.classList.remove('tip-open'); });
+      if (box) box.classList.toggle('tip-open');
     });
 
     if (window.innerWidth > 768) {

@@ -1,7 +1,11 @@
 // chrome-extension/src/popup/popup.js
 const state = { jobs: [], selected: new Set() };
 
-function jobKey(j) { return j.external_id || j.url; }
+function jobKey(j) {
+  return (j.platform && j.external_id)
+    ? `${j.platform}:${j.external_id}`
+    : (j.external_id || j.url);
+}
 
 function formatMeta(j) {
   const parts = [];

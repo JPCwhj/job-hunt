@@ -313,7 +313,7 @@ function jhSetFabContent(btn, icon, label, saved) {
 async function jhRefreshFabState(btn) {
   const id = jhExtractExternalId();
   if (!id) return;
-  const saved = await jhHasJob(id);
+  const saved = await jhHasJob("boss:" + id);
   if (saved) jhSetFabContent(btn, "✅", "已收藏（点击取消）", true);
   else jhSetFabContent(btn, "⭐", "加入清单", false);
 }
@@ -321,9 +321,9 @@ async function jhRefreshFabState(btn) {
 async function jhOnFabClick(btn) {
   const id = jhExtractExternalId();
   if (!id) { jhShowToast("未能识别岗位 ID"); return; }
-  const saved = await jhHasJob(id);
+  const saved = await jhHasJob("boss:" + id);
   if (saved) {
-    await jhRemoveJob(id);
+    await jhRemoveJob("boss:" + id);
     jhShowToast("已从清单移除");
   } else {
     const job = await jhParseBossDetailPage();
@@ -375,6 +375,9 @@ new MutationObserver(() => {
         __jhLastJobId = jhExtractExternalId();
         return;
       }
+      // 其他 SPA 跳转（如 /web/geek/job-recommend → /web/geek/jobs）：
+      // SPA 重渲染可能清掉 FAB，若已丢失则补挂
+      if (!document.getElementById("jh-fab")) jhMountFab();
     }
 
     // 分栏模式：右侧面板切换了新岗位时刷新 FAB 状态

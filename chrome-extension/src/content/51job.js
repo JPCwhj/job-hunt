@@ -164,7 +164,7 @@ function jh51SetFabContent(btn, icon, label, saved) {
 async function jh51RefreshFabState(btn) {
   const id = jh51ExtractExternalId();
   if (!id) return;
-  const saved = await jhHasJob(id);
+  const saved = await jhHasJob("51job:" + id);
   if (saved) jh51SetFabContent(btn, "✅", "已收藏（点击取消）", true);
   else jh51SetFabContent(btn, "⭐", "加入清单", false);
 }
@@ -172,9 +172,9 @@ async function jh51RefreshFabState(btn) {
 async function jh51OnFabClick(btn) {
   const id = jh51ExtractExternalId();
   if (!id) { jh51ShowToast("未能识别岗位 ID"); return; }
-  const saved = await jhHasJob(id);
+  const saved = await jhHasJob("51job:" + id);
   if (saved) {
-    await jhRemoveJob(id);
+    await jhRemoveJob("51job:" + id);
     jh51ShowToast("已从清单移除");
   } else {
     const job = await jh51ParsePage();
