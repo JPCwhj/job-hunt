@@ -38,22 +38,23 @@ After `/job-hunt` finishes, you get a single static HTML file. Opening it in any
 ### 📄 Tailored Resume
 
 Left sidebar lists all positions sorted by match score; right pane shows the resume tailored to the current JD.
-**Red/yellow highlights** mark placeholders that need your input — the AI never fabricates data.
-The "📄 Export PDF" button downloads an A4 PDF with embedded Chinese fonts for cross-platform consistency.
+**Red highlights** `[fill in: xxx]` mark content you must fill in manually; **yellow highlights** `[needs confirmation]` mark AI inferences to verify — the AI never fabricates data.
+Click "📄 Export PDF" to download an A4 PDF; click "🔄 Restore original" to undo any manual edits made in the browser.
 
-![Resume view](htmlImg/long01.png)
+![Resume view](htmlImg/iShot_001.png)
 
 ### 📋 Changelog
 
-A full transparency report on what the AI changed: reordering / rewording / placeholders to fill in / de-emphasized items, each with the reason for the change. **The yellow-highlighted "needs user input" sections** are AI inferences that require your verification.
+A full transparency report on what the AI changed, organized by change type with the reason for each edit.
+Any content requiring manual action is highlighted as a **yellow block**.
 
-![Changelog](htmlImg/long02.png)
+![Changelog](htmlImg/iShot_002.png)
 
 ### 💬 Opener
 
-A ready-to-send HR opening message tailored to the current position (kept within 200 characters). Click "📋 Copy" to use it directly.
+A ready-to-send HR opening message tailored to the current position. Click "📋 Copy opener" to use it directly.
 
-![Opener](htmlImg/long03.png)
+![Opener](htmlImg/iShot_003.png)
 
 ---
 
