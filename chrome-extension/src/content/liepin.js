@@ -4,8 +4,8 @@
 // ============ 工具函数 ============
 
 function jhLpExtractExternalId() {
-  // pathname: /job/1982439527.shtml
-  const m = location.pathname.match(/\/job\/([^.]+)\.shtml/i);
+  // pathname: /job/1982439527.shtml 或 /a/74097847.shtml
+  const m = location.pathname.match(/\/(?:job|a)\/([^.]+)\.shtml/i);
   return m ? m[1] : null;
 }
 
@@ -188,7 +188,7 @@ function jhLpSetFabContent(btn, icon, label, saved) {
 async function jhLpRefreshFabState(btn) {
   const id = jhLpExtractExternalId();
   if (!id) return;
-  const saved = await jhHasJob(id);
+  const saved = await jhHasJob("liepin:" + id);
   if (saved) jhLpSetFabContent(btn, "✅", "已收藏（点击取消）", true);
   else jhLpSetFabContent(btn, "⭐", "加入清单", false);
 }
@@ -196,9 +196,9 @@ async function jhLpRefreshFabState(btn) {
 async function jhLpOnFabClick(btn) {
   const id = jhLpExtractExternalId();
   if (!id) { jhLpShowToast("未能识别岗位 ID"); return; }
-  const saved = await jhHasJob(id);
+  const saved = await jhHasJob("liepin:" + id);
   if (saved) {
-    await jhRemoveJob(id);
+    await jhRemoveJob("liepin:" + id);
     jhLpShowToast("已从清单移除");
   } else {
     const job = await jhLpParsePage();

@@ -1,4 +1,13 @@
 // chrome-extension/src/lib/storage.js
+
+// 用 platform:external_id 作为唯一键，防止不同平台的纯数字 ID 碰撞
+// 兼容旧数据：job 对象里已有 platform 字段，自动生成正确的键
+function jhJobKey(j) {
+  return (j.platform && j.external_id)
+    ? `${j.platform}:${j.external_id}`
+    : (j.external_id || j.url);
+}
+
 async function jhLoadJobs() {
   const data = await chrome.storage.local.get(JH_SCHEMA.STORAGE_KEY);
   return data[JH_SCHEMA.STORAGE_KEY] || [];
@@ -9,10 +18,10 @@ async function jhSaveJobs(jobs) {
 }
 
 async function jhUpsertJob(job) {
-  const key = job.external_id || job.url;
+  const key = jhJobKey(job);
   if (!key) throw new Error("job 没有 external_id 或 url，无法保存");
   const jobs = await jhLoadJobs();
-  const idx = jobs.findIndex(j => (j.external_id || j.url) === key);
+  const idx = jobs.findIndex(j => jhJobKey(j) === key);
   if (idx >= 0) jobs[idx] = job;
   else jobs.push(job);
   await jhSaveJobs(jobs);
@@ -21,14 +30,14 @@ async function jhUpsertJob(job) {
 
 async function jhRemoveJob(key) {
   const jobs = await jhLoadJobs();
-  const filtered = jobs.filter(j => (j.external_id || j.url) !== key);
+  const filtered = jobs.filter(j => jhJobKey(j) !== key);
   await jhSaveJobs(filtered);
   return filtered.length;
 }
 
 async function jhHasJob(key) {
   const jobs = await jhLoadJobs();
-  return jobs.some(j => (j.external_id || j.url) === key);
+  return jobs.some(j => jhJobKey(j) === key);
 }
 
 async function jhClearJobs() {
