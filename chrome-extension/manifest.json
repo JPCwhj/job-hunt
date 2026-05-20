@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "job-hunt 岗位收藏夹",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "在 Boss 直聘、前程无忧、智联招聘详情页一键收藏岗位，导出 .jobs.json 给 job-hunt skill 使用",
   "permissions": ["storage", "downloads"],
   "host_permissions": [

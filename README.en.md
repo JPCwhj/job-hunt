@@ -195,3 +195,13 @@ Run `/job-hunt` in any skill-compatible agent tool (Claude Code, Codex, OpenClaw
 - **Everything stays local**: resume, JDs, and tailored materials are written to your local `jobHuntSkillData/` directory — nothing is auto-uploaded or synced
 - **Same data path as Claude**: the skill connects to no third-party servers; data flow is identical to using Claude directly
 - **Source is inspectable**: pure-text instructions, no network request code — inspect anytime at `~/.claude/skills/`
+
+---
+
+## License
+
+© 2026 [JPCwhj](https://github.com/JPCwhj) · [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)
+
+- Personal use, learning, research, non-commercial projects: no attribution required, no need to ask
+- Publishing derivative works (articles, tools, courses, etc.): please credit the source
+- Commercial use: requires separate authorization — contact: syxxczbwhj@foxmail.com
