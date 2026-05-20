@@ -202,6 +202,6 @@ npx skills add JPCwhj/job-hunt -g -y --all
 
 © 2026 [JPCwhj](https://github.com/JPCwhj) · [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)
 
-个人使用、学习、研究、非商业项目：不需要署名，不需要申请
-公开发布衍生作品（文章、工具、课程等）：请注明来源
-商业用途：需要单独授权，请联系：syxxczbwhj@foxmail.com
+- 个人使用、学习、研究、非商业项目：不需要署名，不需要申请
+- 公开发布衍生作品（文章、工具、课程等）：请注明来源
+- 商业用途：需要单独授权，请联系：syxxczbwhj@foxmail.com

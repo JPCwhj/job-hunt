@@ -202,6 +202,6 @@ Run `/job-hunt` in any skill-compatible agent tool (Claude Code, Codex, OpenClaw
 
 © 2026 [JPCwhj](https://github.com/JPCwhj) · [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)
 
-Personal use, learning, research, non-commercial projects: no attribution required, no need to ask
-Publishing derivative works (articles, tools, courses, etc.): please credit the source
-Commercial use: requires separate authorization — contact: syxxczbwhj@foxmail.com
+- Personal use, learning, research, non-commercial projects: no attribution required, no need to ask
+- Publishing derivative works (articles, tools, courses, etc.): please credit the source
+- Commercial use: requires separate authorization — contact: syxxczbwhj@foxmail.com
