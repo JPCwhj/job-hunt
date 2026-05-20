@@ -41,19 +41,19 @@ Left sidebar lists all positions sorted by match score; right pane shows the res
 **Red/yellow highlights** mark placeholders that need your input — the AI never fabricates data.
 The "📄 Export PDF" button downloads an A4 PDF with embedded Chinese fonts for cross-platform consistency.
 
-![Resume view](htmlImg/long01.png)
+![Resume view](htmlImg/iShot_001.png)
 
 ### 📋 Changelog
 
 A full transparency report on what the AI changed: reordering / rewording / placeholders to fill in / de-emphasized items, each with the reason for the change. **The yellow-highlighted "needs user input" sections** are AI inferences that require your verification.
 
-![Changelog](htmlImg/long02.png)
+![Changelog](htmlImg/iShot_002.png)
 
 ### 💬 Opener
 
 A ready-to-send HR opening message tailored to the current position (kept within 200 characters). Click "📋 Copy" to use it directly.
 
-![Opener](htmlImg/long03.png)
+![Opener](htmlImg/iShot_003.png)
 
 ---
 
