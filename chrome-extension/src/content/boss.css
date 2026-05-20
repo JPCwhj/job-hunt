@@ -1,0 +1,36 @@
+#jh-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 80px;
+  z-index: 999999;
+  padding: 12px 18px;
+  background: #00b38a;
+  color: #fff;
+  border: none;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+#jh-fab:hover { background: #009974; }
+#jh-fab:active { transform: scale(0.97); }
+#jh-fab.jh-saved { background: #6e7d8f; }
+
+#jh-toast {
+  position: fixed;
+  z-index: 999999;
+  padding: 10px 16px;
+  background: rgba(0,0,0,0.78);
+  color: #fff;
+  border-radius: 6px;
+  font-size: 13px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+#jh-toast.jh-show { opacity: 1; }
