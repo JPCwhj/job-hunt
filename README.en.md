@@ -90,7 +90,7 @@ npx skills add JPCwhj/job-hunt -g -y --all
 ```
 
 ```
-# 2. Run inside Claude Code
+# 2. Run inside Codex
 /job-hunt
 
 # 3. Follow the prompts: send resume → send jobs (screenshots or .jobs.json) → wait for results
@@ -194,15 +194,11 @@ Run `/job-hunt` in any skill-compatible agent tool (Claude Code, Codex, OpenClaw
 - **Supported platforms**: screenshot mode is platform-agnostic; the Chrome extension currently supports four major hiring platforms
 - **No auto-apply**: eliminates account ban risk and respects the ethical boundary — you apply manually
 - **Everything stays local**: resume, JDs, and tailored materials are written to your local `jobHuntSkillData/` directory — nothing is auto-uploaded or synced
-- **Same data path as Claude**: the skill connects to no third-party servers; data flow is identical to using Claude directly
-- **Source is inspectable**: pure-text instructions, no network request code — inspect anytime at `~/.claude/skills/`
+- **Same data path as Codex**: the skill connects to no third-party servers; data flow is identical to using an Agent directly
+- **Source is inspectable**: pure-text instructions, no network request code
 
 ---
 
 ## License
 
-© 2026 [JPCwhj](https://github.com/JPCwhj) · [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)
-
-- Personal use, learning, research, non-commercial projects: no attribution required, no need to ask
-- Publishing derivative works (articles, tools, courses, etc.): please credit the source
-- Commercial use: requires separate authorization — contact: syxxczbwhj@foxmail.com
+© 2026 [JPCwhj](https://github.com/JPCwhj) · [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0)

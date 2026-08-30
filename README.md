@@ -90,7 +90,7 @@ npx skills add JPCwhj/job-hunt -g -y --all
 ```
 
 ```
-# 2. 在 Claude Code 里运行
+# 2. 在 Codex 里运行
 /job-hunt
 
 # 3. 跟着提示走：发简历 → 发岗位（截图或 .jobs.json）→ 等结果
@@ -194,15 +194,11 @@ npx skills add JPCwhj/job-hunt -g -y --all
 - **支持的平台**：截图模式不限平台；Chrome 插件目前覆盖 Boss 直聘、前程无忧、智联招聘、猎聘
 - **不做自动投递**：避免封号风险 + 守住伦理边界，由你手动投递
 - **全部本地存储**：简历、JD、定制简历等全部写入 `jobHuntSkillData/` 目录，不会自动上传或同步
-- **链路与 Claude 一致**：skill 不连接任何第三方服务器，数据处理与你直接使用 Claude 完全相同
-- **skill 源码可查**：纯文本指令，无任何网络请求代码，路径 `~/.claude/skills/`
+- **链路与 Codex 一致**：skill 不连接任何第三方服务器，数据处理与你直接使用 Agent 完全相同
+- **skill 源码可查**：纯文本指令，无任何网络请求代码
 
 ---
 
 ## 许可证
 
-© 2026 [JPCwhj](https://github.com/JPCwhj) · [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)
-
-- 个人使用、学习、研究、非商业项目：不需要署名，不需要申请
-- 公开发布衍生作品（文章、工具、课程等）：请注明来源
-- 商业用途：需要单独授权，请联系：syxxczbwhj@foxmail.com
+© 2026 [JPCwhj](https://github.com/JPCwhj) · [Apache-2.0](https://www.apache.org/licenses/LICENSE-2.0)
