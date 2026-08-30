@@ -74,7 +74,7 @@ A ready-to-send HR opening message tailored to the current position. Click "📋
 
 ## Prerequisites
 
-- [Claude Code](https://github.com/anthropics/claude-code) installed, or any agent that supports the Skill spec (e.g. Codex, OpenClaw)
+- [Codex](https://github.com/openai/codex) installed, or any agent that supports the Skill spec (e.g. Claude Code, OpenClaw)
 - Resume prepared as a **`.md` file** or **plain text ready to paste** — for PDF/Word, extract the text first
 - Job source — pick either:
   - **Screenshot mode**: screenshots from any major hiring platform; **requires your AI model to support vision (image recognition)**

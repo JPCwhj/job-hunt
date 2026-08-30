@@ -74,7 +74,7 @@ HR 扫一眼的时间不到 10 秒——**简历和 JD 的匹配度，才是能�
 
 ## 前置条件
 
-- [Claude Code](https://github.com/anthropics/claude-code) 已安装（或任何支持 Skill 规范的 Agent，如 Codex、OpenClaw 等）
+- [Codex](https://github.com/openai/codex) 已安装（或任何支持 Skill 规范的 Agent，如 ClaudeCode、OpenClaw 等）
 - 简历准备成 **`.md` 文件** 或 **可粘贴的文本**——PDF/Word 请先转出文本
 - 岗位来源任选其一：
   - **截图模式**：任意招聘平台详情页截图；**要求大模型具备视觉能力（能识图）**
